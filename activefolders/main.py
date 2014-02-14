@@ -1,15 +1,16 @@
 from activefolders.utils import Daemon
 import logging
-import time
+import activefolders.api as api
+import activefolders.db as db
 
 LOG = logging.getLogger(__name__)
 
 
-class EmptyDaemon(Daemon):
+class DtnDaemon(Daemon):
     """
-    Empty background process
+    DTN background process
     """
     def run(self):
-        LOG.info("Empty daemon is up")
-        while True:
-            time.sleep(1)
+        LOG.info("DTN daemon is starting")
+        db.init()
+        api.start()
