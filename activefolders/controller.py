@@ -11,7 +11,7 @@ def folders():
     return folders
 
 def folder(uuid):
-    folder = db.Folder.select().where(db.uuid ** uuid).dicts().get()
+    folder = db.Folder.select().where(db.Folder.uuid ** uuid).dicts().get()
     return folder
 
 def add_folder(uuid):
@@ -22,7 +22,7 @@ def add_folder(uuid):
         raise ValueError
 
 def delete_folder(uuid):
-    db.Folder.get(db.uuid ** uuid).delete_instance()
+    db.Folder.get(db.Folder.uuid ** uuid).delete_instance()
     shutil.rmtree(config['dtnd']['storage_path'] + '/' + uuid)
 
 def valid_uuid(uuid):
