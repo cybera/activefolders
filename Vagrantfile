@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
       config.ssh.forward_agent = true
       config.vm.network :private_network, ip: ip, virtualbox__intnet: true
 
-      #config.vm.provision :shell, :inline => $init
+      config.vm.provision :shell, :inline => $init
     end
   end
 end
