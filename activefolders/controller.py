@@ -3,6 +3,12 @@ from activefolders.config import config
 import os
 import shutil
 import activefolders.db as db
+from importlib import import_module
+
+# Getting the correct transport adaptor
+transport_module = "activefolders.transports.{}".format(config['dtnd']['transport'])
+transport = import_module(transport_module)
+
 
 def folders():
     folders = { "folders": [] }
