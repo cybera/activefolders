@@ -37,9 +37,15 @@ def delete_folder(uuid):
         bottle.abort(404)
     return "Folder deleted"
 
-@bottle.get('/delta/<uuid>')
-def delta(uuid):
-    """ Returns a list of changed files between local and remote """
+@bottle.post('/transfer/<uuid>')
+def transfer(uuid):
+    """ Transfers a folder to another DTN """
+    dst = bottle.request.params.get('dst')
+    try:
+        controller.start_transfer(uuid, dst)
+    except peewee.DoesNotExist:
+        bottle.abort(404)
+    return "Transfer initiated"
 
 def start():
     bottle.run(host='localhost', port=8080, debug=True)
