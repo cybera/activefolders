@@ -39,7 +39,7 @@ def start_transfer(src,
     transfer.append(src)
     transfer.append(dst)
     proc = Popen(transfer, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
-    LOG.debug("Initiated transfer {}:'{}'".format(id(proc), transfer.join(" ")))
+    LOG.debug("Initiated transfer {}:'{}'".format(id(proc), " ".join(transfer)))
     return proc
 
 
@@ -51,7 +51,9 @@ def stop_transfer(proc):
 def transfer_is_success(proc):
     LOG.debug("Checking transfer process {}".format(id(proc)))
     retcode = proc.poll()
-    if retcode == 0:
+    if retcode is None:
+        return None
+    elif retcode == 0:
         return True
     else:
         return False
