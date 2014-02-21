@@ -3,43 +3,53 @@ import os.path
 import logging
 
 LOG = logging.getLogger(__name__)
-PATH = "/usr/"
-binary = PATH+"bin/globus-url-copy"
-default_behaviour = [binary,  # binary to run
+PATH = "/usr"
+BINARY = PATH+"/bin/globus-url-copy"
+default_behaviour = [BINARY,  # binary to run
                      "-cd",  # create destination dirs if needed
                      "-r",  # recursive
                      "-fast",  # reuse data channels
                      "-g2",  # use v2 control protocol when possible
                      "-vb",  # display bytes and rate to stdout
                      "-rst",  # restart on fail (5 retries by default)
-                     "-sync"]  # try to transfer only new or updated files
+                     "-sync"]  # transfer only new or updated files
 
-if not os.path.isfile(binary):
-    LOG.critical("No {} is found".format(binary))
-    raise IOError("No {} is found".format(binary))
+if not os.path.isfile(BINARY):
+    LOG.critical("{} is not found".format(BINARY))
+    raise IOError("{} is not found".format(BINARY))
 
 
 def start_transfer(src,
                    dst,
                    parallel_streams=4,
                    concurrent_files=4,
-                   offset=0,
+                   offset=None,
                    length=None):
-    opts = ["-p", str(parallel_streams), "-cc", str(concurrent_files), "-off", str(offset)]
+    opts = ["-p", str(parallel_streams),  # per file
+            "-cc", str(concurrent_files)]
+
+    # Partial transfer
+    if offset:
+        opts += ["-off", str(offset)]
     if length:
-        opts.append("-len {}".format(length))  # length for partial transfers
+        assert offset
+        opts += ["-len", str(length)]
+
     transfer = default_behaviour + opts
     transfer.append(src)
     transfer.append(dst)
-    LOG.debug("Initiating transfer '{}'".format(transfer.join(" ")))
-    return Popen(transfer, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT )
+    proc = Popen(transfer, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
+    LOG.debug("Initiated transfer {}:'{}'".format(id(proc), transfer.join(" ")))
+    return proc
 
 
 def stop_transfer(proc):
+    LOG.debug("Killing transfer process {}".format(id(proc)))
     return proc.kill()
 
 
 def transfer_is_success(proc):
+    LOG.debug("Checking transfer process {}".format(id(proc)))
     retcode = proc.poll()
     if retcode == 0:
         return True
