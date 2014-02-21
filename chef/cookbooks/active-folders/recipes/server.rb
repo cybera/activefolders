@@ -19,3 +19,40 @@
 # under the License.
 # -----------------------------------------------------------------------
 
+package "python3" 
+package "python3-pip"
+
+
+execute "pip3 install" do
+    command "pip3 install peewee bottle"
+    action :run
+end
+
+directory "/etc/activefolders" do
+    owner "root"
+    group "root"
+    mode "0755"
+    action :create
+end
+
+template "/etc/activefolders/activefolders.conf" do
+    source "activefolders.conf.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+end
+
+execute "install daemon" do
+    cwd "/home/ubuntu/active-folders"
+    command "python3 setup.py install"
+    action :run
+end
+
+
+# installation directory is specified via --install-dir, --prefix, or the distutils default setting
+#     /usr/local/lib/python3.3/dist-packages/
+# A different installation directory is preferably one that is listed in the PYTHONPATH environment variable.
+execute "start" do
+    command "/home/ubuntu/active-folders/runner restart"
+end
+
