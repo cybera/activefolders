@@ -2,8 +2,10 @@
 
 ## Simple runner
 
-from activefolders import default_dtn as dtn
+from activefolders.main import DtnDaemon
 import sys
+
+dtn = DtnDaemon(pidfile='/tmp/dtn-daemon.pid')
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
