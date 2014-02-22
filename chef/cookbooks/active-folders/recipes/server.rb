@@ -19,6 +19,34 @@
 # under the License.
 # -----------------------------------------------------------------------
 
+execute "locale" do
+    command "locale-gen en_CA.UTF-8"
+end
+
+remote_file "fetch globus" do
+    source "http://toolkit.globus.org/ftppub/gt5/5.2/5.2.5/installers/repo/globus-repository-5.2-stable-raring_0.0.3_all.deb"
+end
+
+execute "unpack globus" do
+    command "dpkg -i --force-all /tmp/globus.deb"
+end
+
+execute "refresh-apt" do
+    command "apt-get update"
+    #action :nothing
+end
+
+package "globus-gridftp"
+package "libglobus-xio-udt-driver0"
+
+template "/etc/gridftp.conf" do
+    source "gridftp.conf.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+end
+
+
 package "python3" 
 package "python3-pip"
 
@@ -54,5 +82,10 @@ end
 # A different installation directory is preferably one that is listed in the PYTHONPATH environment variable.
 execute "start" do
     command "/home/ubuntu/active-folders/runner restart"
+end
+
+service "globus-gridftp-server" do
+    supports :status => true, :restart => true, :reload => true
+    action [ :enable, :start ]
 end
 
