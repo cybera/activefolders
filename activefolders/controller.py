@@ -27,8 +27,8 @@ def folder(uuid):
 
 def add_folder(uuid):
     if valid_uuid(uuid):
-        db.Folder.create(uuid=uuid)
         os.mkdir(config['dtnd']['storage_path'] + '/' + uuid)
+        db.Folder.create(uuid=uuid)
     else:
         raise ValueError
 
