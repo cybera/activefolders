@@ -1,6 +1,7 @@
 import bottle
 import peewee
 import activefolders.controller as controller
+from activefolders.config import config
 
 @bottle.get('/folders')
 def folders():
@@ -48,4 +49,4 @@ def transfer(uuid):
     return "Transfer initiated"
 
 def start():
-    bottle.run(host='localhost', port=8080, debug=True)
+    bottle.run(host=config['dtnd']['host'], port=config['dtnd']['listen_port'], debug=True)
