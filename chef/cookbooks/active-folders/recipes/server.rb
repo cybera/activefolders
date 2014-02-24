@@ -63,7 +63,7 @@ directory "/etc/activefolders" do
     action :create
 end
 
-template "/etc/activefolders/activefolders.conf" do
+template "/etc/activefolders.conf" do
     source "activefolders.conf.erb"
     owner "root"
     group "root"
