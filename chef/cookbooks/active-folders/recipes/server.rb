@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------
 # Cookbook Name:: active-folders
 # Recipe:: server
-# Description:: 
+# Description::
 #
 # Copyright 2014, Cybera, inc.
 # All rights reserved
@@ -23,7 +23,7 @@ execute "locale" do
     command "locale-gen en_CA.UTF-8"
 end
 
-remote_file "fetch globus" do
+remote_file "/tmp/globus.deb" do
     source "http://toolkit.globus.org/ftppub/gt5/5.2/5.2.5/installers/repo/globus-repository-5.2-stable-raring_0.0.3_all.deb"
 end
 
@@ -47,7 +47,7 @@ template "/etc/gridftp.conf" do
 end
 
 
-package "python3" 
+package "python3"
 package "python3-pip"
 
 
