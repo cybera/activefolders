@@ -10,8 +10,10 @@ $init = <<SCRIPT
     aptitude update
     aptitude install -yq globus-gridftp libglobus-xio-udt-driver0
 
-    cp /vagrant/gridftp.conf /etc/gridftp.conf
+    cp /vagrant/chef/cookbooks/active-folders/templates/default/activefolders.conf.erb /etc/gridftp.conf
     service globus-gridftp-server restart
+
+    python3 -m unittest discover -s "/vagrant"
 
     touch ~/runonce
   fi
@@ -33,6 +35,11 @@ Vagrant.configure("2") do |config|
       config.vm.network :private_network, ip: ip, virtualbox__intnet: true
 
       config.vm.provision :shell, :inline => $init
+      #config.vm.provision "chef_solo" do |chef|
+      #  chef.cookbooks_path = "chef/cookbooks"
+      #  chef.add_recipe "active-folders::server"
+      #  chef.json = {}
+      #end
     end
   end
 end
