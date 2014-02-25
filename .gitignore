@@ -56,3 +56,6 @@ docs/_build/
 
 # OSX stuff
 .DS_Store
+
+# Swap files
+.swp
