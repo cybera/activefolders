@@ -37,6 +37,7 @@ class ControllerTest(test.TestCase):
             folder = controller.folder(uuid[0])
         except:
             self.fail("folder() raised an exception unexpectedly")
+        self.assertEqual(folder.uuid, uuid)
 
     def test_add_folder(self):
         uuid = uuid4()
@@ -56,7 +57,7 @@ class ControllerTest(test.TestCase):
         except:
             self.fail("delete_folder() raised an exception unexpectedly")
         new_uuids = db.Folder.select(db.Folder.uuid)
-        assertTrue(self.uuids[0] not in new_uuids)
+        self.assertTrue(self.uuids[0] not in new_uuids)
 
     def test_start_transfer(self):
         uuid = uuid4()
