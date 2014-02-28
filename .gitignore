@@ -55,4 +55,4 @@ docs/_build/
 .vagrant/
 
 # Swap files
-.swp
+*.swp
