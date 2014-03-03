@@ -46,22 +46,8 @@ template "/etc/gridftp.conf" do
     mode "0644"
 end
 
-
 package "python3"
 package "python3-pip"
-
-
-execute "pip3 install" do
-    command "pip3 install peewee bottle"
-    action :run
-end
-
-directory "/etc/activefolders" do
-    owner "root"
-    group "root"
-    mode "0755"
-    action :create
-end
 
 template "/etc/activefolders.conf" do
     source "activefolders.conf.erb"
@@ -71,8 +57,7 @@ template "/etc/activefolders.conf" do
 end
 
 execute "install daemon" do
-    cwd "/home/ubuntu/active-folders"
-    command "python3 setup.py install"
+    command "pip3 install -e #{node['active-folders']['repository']}"
     action :run
 end
 
@@ -81,11 +66,11 @@ end
 #     /usr/local/lib/python3.3/dist-packages/
 # A different installation directory is preferably one that is listed in the PYTHONPATH environment variable.
 execute "start" do
-    command "/home/ubuntu/active-folders/runner restart"
+    command "#{node['active-folders']['repository']}/runner restart"
 end
 
 service "globus-gridftp-server" do
     supports :status => true, :restart => true, :reload => true
-    action [ :enable, :start ]
+    action [ :enable, :reload ]
 end
 
