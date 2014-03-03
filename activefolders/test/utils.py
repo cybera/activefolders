@@ -6,7 +6,7 @@ def set_test_config():
     config.config['dtnd']['storage_path'] = "/tmp"
     config.config['dtnd']['db_path'] = ":memory:"
     config.config['dtnd']['host'] = "localhost"
-    config.config['dtnd']['listen_port'] = 8080
+    config.config['dtnd']['listen_port'] = "8080"
 
 def populate_database():
     uuids = []

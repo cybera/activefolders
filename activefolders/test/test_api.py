@@ -10,7 +10,8 @@ class ApiTest(test.TestCase):
     conn = None
     uuids = None
 
-    def setUpClass(self):
+    @classmethod
+    def setUpClass(cls):
         utils.set_test_config()
         db.init()
         api.start()

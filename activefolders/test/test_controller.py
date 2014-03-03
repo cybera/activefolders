@@ -8,7 +8,8 @@ import activefolders.test.utils as utils
 class ControllerTest(test.TestCase):
     uuids = None
 
-    def setUpClass(self):
+    @classmethod
+    def setUpClass(cls):
         utils.set_test_config()
         db.init()
 
