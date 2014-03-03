@@ -26,7 +26,7 @@ class ControllerTest(test.TestCase):
             self.assertTrue(folder.uuid in self.uuids)
 
     def test_folder(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.assertRaises(peewee.IntegrityError, controller.folder, uuid)
         self.uuids = utils.populate_database()
         try:
@@ -36,7 +36,7 @@ class ControllerTest(test.TestCase):
         self.assertEqual(folder.uuid, uuid)
 
     def test_add_folder(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         try:
             controller.add_folder(uuid)
         except:
@@ -45,7 +45,7 @@ class ControllerTest(test.TestCase):
         self.assertRaises(ValueError, controller.add_folder, 0)
 
     def test_delete_folder(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.assertRaises(peewee.IntegrityError, controller.delete_folder, uuid)
         self.uuids = utils.populate_database()
         try:
@@ -56,10 +56,10 @@ class ControllerTest(test.TestCase):
         self.assertTrue(self.uuids[0] not in new_uuids)
 
     def test_start_transfer(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.assertRaises(peewee.IntegrityError, controller.start_transfer, uuid, "/tmp")
 
     def test_valid_uuid(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.assertTrue(controller.valid_uuid(uuid))
         self.assertFalse(controller.valid_uuid(0))

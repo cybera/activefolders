@@ -11,7 +11,7 @@ def set_test_config():
 def populate_database():
     uuids = []
     for i in range(1, 5):
-        uuid = uuid4()
+        uuid = uuid4().hex
         db.Folder.create(uuid=uuid)
         uuids.append(uuid)
     return uuids

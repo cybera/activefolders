@@ -35,20 +35,20 @@ class ApiTest(test.TestCase):
         self.assertEqual(len(folders), len(self.uuids))
 
     def test_folder(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.request_and_response(404, 'GET', '/folders/{}'.format(uuid))
         self.uuids = utils.populate_database()
         self.request_and_response(200, 'GET', '/folders/{}'.format(self.uuids[0]))
 
     def test_add_folder(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.request_and_response(201, 'POST', '/folders/{}'.format(uuid))
         self.request_and_response(200, 'GET', '/folders/{}'.format(uuid))
         self.request_and_response(403, 'POST', '/folders/{}'.format(uuid))
         self.request_and_response(400, 'POST', '/folders/0')
 
     def test_delete_folder(self):
-        uuid = uuid4()
+        uuid = uuid4().hex
         self.request_and_response(404, 'DELETE', '/folders/{}'.format(uuid))
         utils.populate_database()
         self.request_and_response(200, 'DELETE', '/folders/{}'.format(self.uuids[0]))
