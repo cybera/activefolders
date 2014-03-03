@@ -1,7 +1,7 @@
 from peewee import *
-from activefolders.config import config
+import activefolders.config as config
 
-database = SqliteDatabase(config['dtnd']['db_path'])
+database = SqliteDatabase(config.config['dtnd']['db_path'])
 
 class BaseModel(Model):
     class Meta:

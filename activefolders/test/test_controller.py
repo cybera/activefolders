@@ -1,29 +1,24 @@
 from uuid import uuid4
 import peewee
 import unittest as test
-import activefolders.config as config
 import activefolders.db as db
 import activefolders.controller as controller
+import activefolders.test.utils as utils
 
 class ControllerTest(test.TestCase):
     uuids = None
 
-    def setUp(self):
-        config.config['dtnd']['storage_path'] = "/tmp"
-        config.config['dtnd']['db_path'] = ":memory:"
+    def setUpClass(self):
+        utils.set_test_config()
         db.init()
-        self.uuids = []
 
-    def populate_database(self):
-        for i in range(1, 5):
-            uuid = uuid4()
-            db.Folder.create(uuid=uuid)
-            self.uuids.appent(uuid)
+    def setUp(self):
+        self.uuids = None
 
     def test_folders(self):
         folders = controller.folders()
         self.assertEqual(len(folders), 0)
-        self.populate_database()
+        self.uuids = utils.populate_database()
         folders = controller.folders()
         self.assertEqual(len(folders), len(self.uuids))
         for folder in folders:
@@ -32,7 +27,7 @@ class ControllerTest(test.TestCase):
     def test_folder(self):
         uuid = uuid4()
         self.assertRaises(peewee.IntegrityError, controller.folder, uuid)
-        self.populate_database()
+        self.uuids = utils.populate_database()
         try:
             folder = controller.folder(uuid[0])
         except:
@@ -51,7 +46,7 @@ class ControllerTest(test.TestCase):
     def test_delete_folder(self):
         uuid = uuid4()
         self.assertRaises(peewee.IntegrityError, controller.delete_folder, uuid)
-        self.populate_database()
+        self.uuids = utils.populate_database()
         try:
             controller.delete_folder(self.uuids[0])
         except:

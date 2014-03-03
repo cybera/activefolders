@@ -15,7 +15,7 @@ def folder(uuid):
     try:
         folder = controller.folder(uuid)
     except peewee.DoesNotExist:
-        bottle.abort(404)
+        bottle.abort(404, "Folder not found")
     return folder
 
 @bottle.post('/folders/<uuid>')
@@ -24,9 +24,10 @@ def add_folder(uuid):
     try:
         controller.add_folder(uuid)
     except peewee.IntegrityError:
-        return "Folder already exists"
+        bottle.abort(403, "Folder already exists")
     except ValueError:
-        return "Invalid UUID"
+        bottle.abort(400, "Invalid UUID")
+    bottle.response.status = 201
     return "Folder added"
 
 @bottle.delete('/folders/<uuid>')
@@ -35,7 +36,7 @@ def delete_folder(uuid):
     try:
         controller.delete_folder(uuid)
     except peewee.DoesNotExist:
-        bottle.abort(404)
+        bottle.abort(404, "Folder not found")
     return "Folder deleted"
 
 @bottle.post('/transfer/<uuid>')
@@ -45,7 +46,7 @@ def transfer(uuid):
     try:
         controller.start_transfer(uuid, dst)
     except peewee.DoesNotExist:
-        bottle.abort(404)
+        bottle.abort(404, "Folder not found")
     return "Transfer initiated"
 
 def start():

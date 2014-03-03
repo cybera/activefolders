@@ -1,13 +1,13 @@
 from uuid import UUID
-from activefolders.config import config
+from importlib import import_module
 import os
 import shutil
 import activefolders.db as db
-from importlib import import_module
+import activefolders.config as config
 
 # Getting the correct transport adaptor
 transport_module = "activefolders.transports.{}".format(
-    config['dtnd']['transport'])
+    config.config['dtnd']['transport'])
 transport = import_module(transport_module)
 
 transfers = {}
@@ -28,14 +28,14 @@ def folder(uuid):
 def add_folder(uuid):
     if valid_uuid(uuid):
         db.Folder.create(uuid=uuid)
-        os.mkdir(config['dtnd']['storage_path'] + '/' + uuid)
+        os.mkdir(config.config['dtnd']['storage_path'] + '/' + uuid)
     else:
         raise ValueError
 
 
 def delete_folder(uuid):
     db.Folder.get(db.Folder.uuid ** uuid).delete_instance()
-    shutil.rmtree(config['dtnd']['storage_path'] + '/' + uuid)
+    shutil.rmtree(config.config['dtnd']['storage_path'] + '/' + uuid)
 
 
 def start_transfer(uuid, dst):
@@ -43,7 +43,7 @@ def start_transfer(uuid, dst):
     db.Folder.get(db.Folder.uuid ** uuid)
 
     # Form urls
-    src = config['dtnd']['storage_path'] + '/' + uuid + '/'
+    src = config.config['dtnd']['storage_path'] + '/' + uuid + '/'
     #if dst[-1] is not '/':
     #    dst += '/'
     dst += '/' + uuid + '/'
