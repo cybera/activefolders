@@ -1,53 +1,64 @@
+from contextlib import contextmanager
 import bottle
 import peewee
 import activefolders.controller as controller
-from activefolders.config import config
+import activefolders.config as config
 
-@bottle.get('/folders')
+api = bottle.Bottle()
+
+
+@contextmanager
+def handle_errors():
+    try:
+        yield
+    except ValueError:
+        bottle.abort(400, "Invalid UUID")
+    except peewee.IntegrityError:
+        bottle.abort(403, "Folder already exists")
+    except peewee.DoesNotExist:
+        bottle.abort(404, "Folder not found")
+
+
+@api.get('/folders')
 def folders():
     """ Returns a list of all folders present on the DTN """
     folders = controller.folders()
     return folders
 
-@bottle.get('/folders/<uuid>')
+
+@api.get('/folders/<uuid>')
 def folder(uuid):
     """ Returns metadata for a folder """
-    try:
+    with handle_errors():
         folder = controller.folder(uuid)
-    except peewee.DoesNotExist:
-        bottle.abort(404, "Folder not found")
     return folder
 
-@bottle.post('/folders/<uuid>')
+
+@api.post('/folders/<uuid>')
 def add_folder(uuid):
     """ Adds a new folder to the DTN """
-    try:
+    with handle_errors():
         controller.add_folder(uuid)
-    except peewee.IntegrityError:
-        bottle.abort(403, "Folder already exists")
-    except ValueError:
-        bottle.abort(400, "Invalid UUID")
     bottle.response.status = 201
     return "Folder added"
 
-@bottle.delete('/folders/<uuid>')
+
+@api.delete('/folders/<uuid>')
 def delete_folder(uuid):
     """ Deletes a folder from the DTN """
-    try:
+    with handle_errors():
         controller.delete_folder(uuid)
-    except peewee.DoesNotExist:
-        bottle.abort(404, "Folder not found")
     return "Folder deleted"
 
-@bottle.post('/transfer/<uuid>')
+
+@api.post('/transfer/<uuid>')
 def transfer(uuid):
     """ Transfers a folder to another DTN """
     dst = bottle.request.params.get('dst')
-    try:
+    with handle_errors():
         controller.start_transfer(uuid, dst)
-    except peewee.DoesNotExist:
-        bottle.abort(404, "Folder not found")
     return "Transfer initiated"
 
+
 def start():
-    bottle.run(host=config['dtnd']['host'], port=config['dtnd']['listen_port'], debug=True)
+    api.run(host=config.config['dtnd']['host'], port=config.config['dtnd']['listen_port'], debug=True)

@@ -1,3 +1,4 @@
+from uuid import UUID
 import sys
 import os
 import time
@@ -125,3 +126,7 @@ class Daemon(object):
 
         It will be called after the process has been daemonized by
         start() or restart()."""
+
+
+def coerce_uuid(uuid):
+    return str(UUID(uuid))

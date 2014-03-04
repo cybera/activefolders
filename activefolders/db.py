@@ -1,14 +1,25 @@
 from peewee import *
 import activefolders.config as config
+import activefolders.utils as utils
 
-deferred_db = SqliteDatabase(None)
+deferred_db = SqliteDatabase(None, fields={'text': 'text'})
+
 
 class BaseModel(Model):
     class Meta:
         database = deferred_db
 
+
+class UUIDField(Field):
+    db_field = 'text'
+
+    def coerce(self, value):
+        return utils.coerce_uuid(value)
+
+
 class Folder(BaseModel):
-    uuid = CharField(primary_key=True, max_length=36)
+    uuid = UUIDField(primary_key=True)
+
 
 def init():
     deferred_db.init(config.config['dtnd']['db_path'])
