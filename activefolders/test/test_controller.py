@@ -42,7 +42,7 @@ class ControllerTest(test.TestCase):
         except:
             self.fail("add_folder() raised an exception unexpectedly")
         self.assertRaises(peewee.IntegrityError, controller.add_folder, uuid)
-        self.assertRaises(ValueError, controller.add_folder, 0)
+        self.assertRaises(ValueError, controller.add_folder, "a")
 
     def test_delete_folder(self):
         uuid = uuid4().hex
@@ -62,4 +62,4 @@ class ControllerTest(test.TestCase):
     def test_valid_uuid(self):
         uuid = uuid4().hex
         self.assertTrue(controller.valid_uuid(uuid))
-        self.assertFalse(controller.valid_uuid(0))
+        self.assertFalse(controller.valid_uuid("a"))
