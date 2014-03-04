@@ -10,11 +10,11 @@ Vagrant.configure("2") do |config|
       config.vm.hostname = srv
       config.vm.provider :virtualbox do |vb|
         vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-        vb.customize ["modifyvm", :id, "--memory", 1024]
+        vb.customize ["modifyvm", :id, "--memory", "1024"]
         vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
       end
       config.ssh.forward_agent = true
-      config.vm.network :private_network, ip: ip, virtualbox__intnet: true
+      config.vm.network :private_network, ip: ip, virtualbox__intnet: "true"
 
       config.vm.provision "chef_solo" do |chef|
         chef.cookbooks_path = "chef/cookbooks"
