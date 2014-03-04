@@ -19,3 +19,4 @@
 # under the License.
 # -----------------------------------------------------------------------
 
+include_recipe "active-folders::default"
