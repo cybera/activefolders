@@ -4,7 +4,7 @@ import peewee
 import activefolders.controller as controller
 import activefolders.config as config
 
-api = bottle.Bottle()
+app = bottle.Bottle()
 
 
 @contextmanager
@@ -19,14 +19,14 @@ def handle_errors():
         bottle.abort(404, "Folder not found")
 
 
-@api.get('/folders')
+@app.get('/folders')
 def folders():
     """ Returns a list of all folders present on the DTN """
     folders = controller.folders()
     return folders
 
 
-@api.get('/folders/<uuid>')
+@app.get('/folders/<uuid>')
 def folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
@@ -34,7 +34,7 @@ def folder(uuid):
     return folder
 
 
-@api.post('/folders/<uuid>')
+@app.post('/folders/<uuid>')
 def add_folder(uuid):
     """ Adds a new folder to the DTN """
     with handle_errors():
@@ -43,7 +43,7 @@ def add_folder(uuid):
     return "Folder added"
 
 
-@api.delete('/folders/<uuid>')
+@app.delete('/folders/<uuid>')
 def delete_folder(uuid):
     """ Deletes a folder from the DTN """
     with handle_errors():
@@ -51,7 +51,7 @@ def delete_folder(uuid):
     return "Folder deleted"
 
 
-@api.post('/transfer/<uuid>')
+@app.post('/transfer/<uuid>')
 def transfer(uuid):
     """ Transfers a folder to another DTN """
     dst = bottle.request.params.get('dst')
@@ -61,4 +61,4 @@ def transfer(uuid):
 
 
 def start():
-    api.run(host=config.config['dtnd']['host'], port=config.config['dtnd']['listen_port'], debug=True)
+    app.run(host=config.config['dtnd']['host'], port=config.config['dtnd']['listen_port'], debug=True)
