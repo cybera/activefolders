@@ -19,6 +19,9 @@
 # under the License.
 # -----------------------------------------------------------------------
 
+
+include_recipe "active-folders::default"
+
 execute "locale" do
     command "locale-gen en_CA.UTF-8"
 end

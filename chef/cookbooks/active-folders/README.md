@@ -38,7 +38,7 @@ sudo apt-get -y upgrade
 # A conflict prevents chef 11 from working with ruby 1.9.
 # Here, we replace it with ruby 1.8
 sudo apt-get remove ruby1.9.1 --purge
-sudo aptitude install -y ruby ruby1.8-dev build-essential wget libruby1.8 rubygems
+sudo aptitude install -y ruby1.8 ruby1.8-dev libruby1.8 rubygems build-essential wget 
 
 sudo gem update --no-rdoc --no-ri
 sudo gem install ohai chef --no-rdoc --no-ri
