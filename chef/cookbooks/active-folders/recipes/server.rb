@@ -69,8 +69,6 @@ end
 #     /usr/local/lib/python3.3/dist-packages/
 # A different installation directory is preferably one that is listed in the PYTHONPATH environment variable.
 execute "start" do
-    user node['active-folders']['user']
-    group node['active-folders']['group']
     command "#{node['active-folders']['repository']}/runner restart"
 end
 

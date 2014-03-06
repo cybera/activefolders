@@ -1,4 +1,7 @@
 from uuid import UUID
+from activefolders.config import config
+from pwd import getpwnam
+from grp import getgrnam
 import sys
 import os
 import time
@@ -16,6 +19,8 @@ class Daemon(object):
 
     def __init__(self, pidfile):
         self.pidfile = pidfile
+        self.uid = getpwnam(config['dtnd']['user'])[2]
+        self.gid = getgrnam(config['dtnd']['group'])[2]
 
     def daemonize(self):
         """Deamonize class. UNIX double fork mechanism."""
@@ -31,7 +36,9 @@ class Daemon(object):
             sys.exit(1)
 
         # decouple from parent environment
-        os.chdir('/')
+        os.setuid(self.uid)
+        os.setgid(self.gid)
+        os.chdir(os.getenv("HOME"))
         os.setsid()
         os.umask(0)
 
