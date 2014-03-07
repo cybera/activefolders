@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------
 # Cookbook Name:: active-folders
 # Recipe:: default
-# Description:: 
+# Description::
 #
 # Copyright 2014, Cybera, inc.
 # All rights reserved

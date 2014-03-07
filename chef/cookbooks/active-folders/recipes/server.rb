@@ -61,7 +61,6 @@ end
 
 execute "install daemon" do
     command "pip3 install -e #{node['active-folders']['repository']}"
-    action :run
 end
 
 
