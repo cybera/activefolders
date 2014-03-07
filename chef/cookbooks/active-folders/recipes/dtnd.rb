@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------
 # Cookbook Name:: active-folders
-# Recipe:: server
+# Recipe:: dtnd
 # Description::
 #
 # Copyright 2014, Cybera, inc.
@@ -60,7 +60,7 @@ template "/etc/activefolders.conf" do
 end
 
 execute "install daemon" do
-    command "pip3 install -e #{node['active-folders']['repository']}"
+    command "pip3 install -e #{node['dtnd']['repository']}"
 end
 
 
@@ -68,7 +68,7 @@ end
 #     /usr/local/lib/python3.3/dist-packages/
 # A different installation directory is preferably one that is listed in the PYTHONPATH environment variable.
 execute "start" do
-    command "#{node['active-folders']['repository']}/runner restart"
+    command "#{node['dtnd']['repository']}/runner restart"
 end
 
 service "globus-gridftp-server" do

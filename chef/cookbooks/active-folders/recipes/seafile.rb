@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------
 # Cookbook Name:: active-folders
-# Recipe:: default
+# Recipe:: seafile
 # Description::
 #
 # Copyright 2014, Cybera, inc.
@@ -19,6 +19,20 @@
 # under the License.
 # -----------------------------------------------------------------------
 
-template "/etc/motd.tail" do
-	source "motd.tail.erb"
+
+include_recipe "active-folders::default"
+
+remote_file "/tmp/seafile.tar.gz" do
+    owner node['dtnd']['user']
+    source "https://bitbucket.org/haiwen/seafile/downloads/seafile-server_#{node['seafile']['version']}_x86-64.tar.gz"
+end
+
+execute "unpack seafile" do
+    user node['dtnd']['user']
+    cwd "/vagrant/"
+    command "tar -xzf /tmp/seafile.tar.gz"
+end
+
+%w(python2.7 python-setuptools python-simplejson python-imaging sqlite3).each do |name|
+    package name
 end
