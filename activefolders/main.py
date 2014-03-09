@@ -14,3 +14,9 @@ class DtnDaemon(Daemon):
         LOG.info("DTN daemon is starting")
         db.init()
         api.start()
+
+
+def dtnd():
+    LOG.info("DTN daemon is starting")
+    db.init()
+    api.start()

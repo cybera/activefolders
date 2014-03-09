@@ -8,12 +8,15 @@ def read(fname):
 setup(
     name="activefolders",
     version="0.0.1-SNAPSHOT",
-    packages=find_packages(),
+    packages=find_packages(exclude=['test']),
     author="Cybera Inc.",
     author_email="devops@cybera.ca",
     license="BSD",
     url="https://github.com/cybera/active-folders",
     description="A gridftp wrapper intended to provide Dropbox-like service to scientits",
     long_description=read('README.md'),
-    install_requires=["bottle", "peewee"]
+    install_requires=["bottle", "peewee"],
+    entry_points={
+    'console_scripts': ["dtnd = activefolders.main:dtnd"]
+    }
     )
