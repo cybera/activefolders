@@ -22,17 +22,18 @@
 
 include_recipe "active-folders::default"
 
-remote_file "/tmp/seafile.tar.gz" do
-    owner node['dtnd']['user']
-    source "https://bitbucket.org/haiwen/seafile/downloads/seafile-server_#{node['seafile']['version']}_x86-64.tar.gz"
-end
-
-execute "unpack seafile" do
-    user node['dtnd']['user']
-    cwd "/vagrant/"
-    command "tar -xzf /tmp/seafile.tar.gz"
-end
-
 %w(python2.7 python-setuptools python-simplejson python-imaging sqlite3).each do |name|
     package name
 end
+
+remote_file "/tmp/seafile.tar.gz" do
+    source "https://bitbucket.org/haiwen/seafile/downloads/seafile-server_#{node['seafile']['version']}_x86-64.tar.gz"
+end
+
+execute "tar -xzf /tmp/seafile.tar.gz -C /opt/"
+
+link "/opt/seafile-server" do
+    to "/opt/seafile-server_#{node['seafile']['version']}"
+end
+
+ENV["LD_LIBRARY_PATH"] = "/opt/seafile-server/seafile/lib/:/opt/seafile-server/seafile/lib64:#{ENV["LD_LIBRARY_PATH"]}"

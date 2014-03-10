@@ -21,7 +21,7 @@ Vagrant.configure("2") do |config|
         chef.add_recipe "active-folders::dtnd"
         chef.add_recipe "active-folders::seafile"
         chef.json = {
-          "active-folders" => {
+          "dtnd" => {
             "repository" => "/vagrant",
             "user" => "vagrant",
             "group" => "vagrant"
