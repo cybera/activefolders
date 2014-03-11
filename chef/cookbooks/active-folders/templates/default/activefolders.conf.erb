@@ -10,5 +10,5 @@ db_path = /tmp/dtnd.db
 transport = gridftp_simple
 host = localhost
 listen_port = 8080
-user = <%= node['active-folders']['user'] %>
-group = <%= node['active-folders']['group'] %>
+user = <%= node['dtnd']['user'] %>
+group = <%= node['dtnd']['group'] %>
