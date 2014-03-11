@@ -32,8 +32,6 @@ class ApiTest(test.TestCase):
     def test_folder(self):
         uuid = uuid4().hex
         self.request_and_response(404, 'GET', '/folders/{}'.format(uuid))
-        self.app.get('/folders/{}'.format(uuid), status=404)
-        self.assertEqual
         self.uuids = testutils.populate_database(1)
         self.request_and_response(200, 'GET', '/folders/{}'.format(self.uuids[0]))
 

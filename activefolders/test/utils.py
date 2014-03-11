@@ -1,14 +1,14 @@
 from uuid import uuid4
-import activefolders.config as config
+import activefolders.conf as conf
 import activefolders.db as db
 import activefolders.utils as utils
 
 
 def set_test_config():
-    config.config['dtnd']['storage_path'] = "/tmp"
-    config.config['dtnd']['db_path'] = ":memory:"
-    config.config['dtnd']['host'] = "localhost"
-    config.config['dtnd']['listen_port'] = "8080"
+    conf.settings['dtnd']['storage_path'] = "/tmp"
+    conf.settings['dtnd']['db_path'] = ":memory:"
+    conf.settings['dtnd']['host'] = "localhost"
+    conf.settings['dtnd']['listen_port'] = "8080"
 
 
 def clear_database():

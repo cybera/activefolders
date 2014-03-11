@@ -1,5 +1,8 @@
 import configparser
 import os
 
-config = configparser.ConfigParser()
-config.read(['/etc/activefolders.conf', os.path.expanduser('~/.activefolders.conf')])
+activefolders = configparser.ConfigParser()
+activefolders.read(['/etc/activefolders.conf', os.path.expanduser('~/.activefolders.conf')])
+
+destinations = configparser.ConfigParser()
+destinations.read(['/etc/activefolders/destinations.conf'])

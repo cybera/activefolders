@@ -1,5 +1,4 @@
 from uuid import UUID
-from activefolders.config import config
 from pwd import getpwnam
 from grp import getgrnam
 import sys
@@ -8,6 +7,7 @@ import time
 import atexit
 import signal
 import logging
+import activefolders.conf as conf
 
 LOG = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ class Daemon(object):
 
     def __init__(self, pidfile):
         self.pidfile = pidfile
-        self.uid = getpwnam(config['dtnd']['user'])[2]
-        self.gid = getgrnam(config['dtnd']['group'])[2]
+        self.uid = getpwnam(conf.settings['dtnd']['user'])[2]
+        self.gid = getgrnam(conf.settings['dtnd']['group'])[2]
 
     def daemonize(self):
         """Deamonize class. UNIX double fork mechanism."""

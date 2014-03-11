@@ -1,21 +1,26 @@
-import sys
-import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import activefolders.conf as conf
 
-class DtnHandler(FileSystemEventHandler):
+observer = None
+
+
+class FolderHandler(FileSystemEventHandler):
     def on_modified(self, event):
         print(event)
 
-if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else '.'
-    event_handler = DtnHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
+
+def start():
+    global observer
+    if observer is None:
+        path = conf.settings['dtnd']['storage_path']
+        event_handler = FolderHandler()
+        observer = Observer()
+        observer.schedule(event_handler, path, recursive=True)
+ 
     observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
+
+
+def stop():
+    observer.stop()
     observer.join()
