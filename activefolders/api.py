@@ -39,7 +39,7 @@ def get_folder(uuid):
 def add_folder(uuid):
     """ Adds a new folder to the DTN """
     with handle_errors():
-        folders.get(uuid)
+        folders.add(uuid)
     bottle.response.status = 201
     return "Folder added"
 
