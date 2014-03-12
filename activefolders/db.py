@@ -17,15 +17,15 @@ class UUIDField(peewee.Field):
         return utils.coerce_uuid(value)
 
 
-class Folder(peewee.BaseModel):
-    uuid = peewee.UUIDField(primary_key=True)
+class Folder(BaseModel):
+    uuid = UUIDField(primary_key=True)
 
     def path(self):
         path = conf.settings['dtnd']['storage_path'] + '/' + self.uuid
         return path
 
 
-class Transfer(peewee.BaseModel):
+class Transfer(BaseModel):
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
     completed = peewee.BooleanField(default=False)
