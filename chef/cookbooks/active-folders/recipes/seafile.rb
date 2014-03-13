@@ -50,7 +50,7 @@ end
 env = {"LD_LIBRARY_PATH" => "#{INSTALLPATH}/seafile/lib/:#{INSTALLPATH}/seafile/lib64:#{ENV["LD_LIBRARY_PATH"]}"}
 
 execute "ccnet-init" do
-    command "#{INSTALLPATH}/seafile/bin/ccnet-init -c #{TOPDIR}/ccnet --name NAME --port 8000 --host 0.0.0.0"
+    command "#{INSTALLPATH}/seafile/bin/ccnet-init -c #{TOPDIR}/ccnet --name NAME --port 10001 --host 0.0.0.0"
     environment env
     not_if { ::File.exists?("#{TOPDIR}/ccnet/ccnet.conf")}
     umask 022
@@ -64,7 +64,7 @@ end
 
 
 file "#{TOPDIR}/ccnet/seafile.ini" do
-    content "/srv/seafile-data"
+    content "/srv/seafile-data\n"
 end
 
 directory "#{TOPDIR}/conf"
@@ -113,7 +113,7 @@ execute "move avatars folder" do
     not_if { ::File.exists?("#{TOPDIR}/seahub-data/avatars")}
 end
 
-link "#{INSTALLPATH}/seahub/media" do
+link "#{INSTALLPATH}/seahub/media/avatars" do
     to "#{TOPDIR}/seahub-data/avatars"
     not_if { ::File.exists?("#{TOPDIR}/seahub-data/avatars")}
 end
