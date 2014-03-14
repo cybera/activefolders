@@ -17,6 +17,6 @@ setup(
     long_description=read('README.md'),
     install_requires=["bottle", "peewee"],
     entry_points={
-    'console_scripts': ["dtnd = activefolders.main:dtnd"]
+    'console_scripts': ["dtnd = activefolders.main:default_start"]
     }
     )

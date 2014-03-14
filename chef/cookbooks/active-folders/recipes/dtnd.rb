@@ -63,13 +63,16 @@ execute "install daemon" do
     command "pip3 install -e #{node['dtnd']['repository']}"
 end
 
-
-# installation directory is specified via --install-dir, --prefix, or the distutils default setting
-#     /usr/local/lib/python3.3/dist-packages/
-# A different installation directory is preferably one that is listed in the PYTHONPATH environment variable.
-execute "start" do
-    command "#{node['dtnd']['repository']}/runner restart"
+template "/etc/init.d/dtnd" do
+    source "dtnd-init.erb"
+    mode 0755
 end
+
+service "dtnd" do
+    supports :restart => true
+    action [ :enable, :start ]
+end
+
 
 service "globus-gridftp-server" do
     supports :status => true, :restart => true, :reload => true

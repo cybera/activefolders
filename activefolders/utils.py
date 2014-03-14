@@ -19,8 +19,6 @@ class Daemon(object):
 
     def __init__(self, pidfile):
         self.pidfile = pidfile
-        self.uid = getpwnam(conf.settings['dtnd']['user'])[2]
-        self.gid = getgrnam(conf.settings['dtnd']['group'])[2]
 
     def daemonize(self):
         """Deamonize class. UNIX double fork mechanism."""
@@ -36,8 +34,6 @@ class Daemon(object):
             sys.exit(1)
 
         # decouple from parent environment
-        os.setuid(self.uid)
-        os.setgid(self.gid)
         os.chdir(os.getenv("HOME"))
         os.setsid()
         os.umask(0)
