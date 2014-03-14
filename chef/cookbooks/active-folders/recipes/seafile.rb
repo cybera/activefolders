@@ -84,9 +84,6 @@ CREATE TABLE IF NOT EXISTS EmailUser (id INTEGER NOT NULL PRIMARY KEY AUTOINCREM
 INSERT INTO EmailUser(email, passwd, is_staff, is_active, ctime) VALUES (\"#{ node[:seafile][:seahub][:login] }\", \"#{ Digest::SHA1.hexdigest(node[:seafile][:seahub][:password]) }\", 1, 1, 0);
 SQL
 
-puts node[:seafile][:seahub][:password]
-puts QUERY
-
 execute "create usermgr db" do
     command "/usr/bin/sqlite3 #{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db '#{QUERY}'"
     not_if { ::File.exists?("#{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db") }
@@ -120,12 +117,22 @@ execute "copy user docs" do
     command "cp -f #{SERVERDIR}/seafile/docs/*.doc #{node[:seafile][:datadir]}/library-template/"
 end
 
-# service "seafile" do
-#     supports :status => true, :restart => true, :reload => true
-#     action [ :enable, :start ]
-# end
+template "/etc/init.d/seafile" do
+    source "seafile-init.erb"
+    mode 0755
+end
 
-# service "seahub" do
-#     supports :status => true, :restart => true, :reload => true
-#     action [ :enable, :start ]
-# end
+template "/etc/init.d/seahub" do
+    source "seahub-init.erb"
+    mode 0755
+end
+
+service "seafile" do
+    supports :restart => true
+    action [ :enable, :start ]
+end
+
+service "seahub" do
+    supports :restart => true
+    action [ :enable, :start ]
+end
