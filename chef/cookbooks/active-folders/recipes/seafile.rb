@@ -27,101 +27,97 @@ include_recipe "active-folders::default"
 end
 
 remote_file "/tmp/seafile.tar.gz" do
-    source "https://bitbucket.org/haiwen/seafile/downloads/seafile-server_#{node['seafile']['version']}_x86-64.tar.gz"
+    source "https://bitbucket.org/haiwen/seafile/downloads/seafile-server_#{node[:seafile][:version]}_x86-64.tar.gz"
     not_if { ::File.exists?("/tmp/seafile.tar.gz")}
 end
 
-TOPDIR = "/opt/seafile"
-
-directory TOPDIR
+directory node[:seafile][:installpath]
 
 execute "unpack seafile archive" do
-    command "tar -xzf /tmp/seafile.tar.gz -C #{TOPDIR}/"
+    command "tar -xzf /tmp/seafile.tar.gz -C #{node[:seafile][:installpath]}/"
 end
 
-INSTALLPATH = "#{TOPDIR}/seafile-server-latest"
+SERVERDIR = "#{node[:seafile][:installpath]}/seafile-server-latest"
 
-link INSTALLPATH do
-    to "#{TOPDIR}/seafile-server-#{node['seafile']['version']}"
+link SERVERDIR do
+    to "#{node[:seafile][:installpath]}/seafile-server-#{node[:seafile][:version]}"
 end
 
 # Seafile config
 
-env = {"LD_LIBRARY_PATH" => "#{INSTALLPATH}/seafile/lib/:#{INSTALLPATH}/seafile/lib64:#{ENV["LD_LIBRARY_PATH"]}"}
+env = {"LD_LIBRARY_PATH" => "#{SERVERDIR}/seafile/lib/:#{SERVERDIR}/seafile/lib64:#{ENV["LD_LIBRARY_PATH"]}"}
 
 execute "ccnet-init" do
-    command "#{INSTALLPATH}/seafile/bin/ccnet-init -c #{TOPDIR}/ccnet --name NAME --port 10001 --host 0.0.0.0"
+    command "#{SERVERDIR}/seafile/bin/ccnet-init -c #{node[:seafile][:ccnet][:configdir]} --name '#{node[:seafile][:ccnet][:name]}' --port #{node[:seafile][:ccnet][:port]} --host #{node[:seafile][:ccnet][:host]}"
     environment env
-    not_if { ::File.exists?("#{TOPDIR}/ccnet/ccnet.conf")}
-    umask 022
+    not_if { ::File.exists?("#{node[:seafile][:ccnet][:configdir]}/ccnet.conf")}
 end
 
 execute "seafile-server-init" do
-    command "#{INSTALLPATH}/seafile/bin/seaf-server-init --seafile-dir /srv/seafile-data --port 12001 --httpserver-port 8082"
+    command "#{SERVERDIR}/seafile/bin/seaf-server-init --seafile-dir #{node[:seafile][:datadir]} --port #{node[:seafile][:port]} --httpserver-port #{node[:seafile][:httpport]}"
     environment env
-    not_if { ::File.exists?("/srv/seafile-data/seafile.conf")}
+    not_if { ::File.exists?("#{node[:seafile][:datadir]}/seafile.conf")}
 end
 
 
-file "#{TOPDIR}/ccnet/seafile.ini" do
-    content "/srv/seafile-data\n"
+file "#{node[:seafile][:ccnet][:configdir]}/seafile.ini" do
+    content node[:seafile][:datadir]
 end
 
-directory "#{TOPDIR}/conf"
+directory node[:seafile][:configdir]
 
-template "#{TOPDIR}/conf/seafdav.conf" do
+template "#{node[:seafile][:configdir]}/seafdav.conf" do
     source "seafdav.conf.erb"
 end
 
 
 # Seahub config
 execute "seahub_settings" do
-    command "python #{INSTALLPATH}/seahub/tools/secret_key_generator.py #{TOPDIR}/seahub_settings.py"
-    not_if { ::File.exists?("#{TOPDIR}/seahub_settings.py")}
+    command "python #{SERVERDIR}/seahub/tools/secret_key_generator.py #{node[:seafile][:installpath]}/seahub_settings.py"
+    not_if { ::File.exists?("#{node[:seafile][:installpath]}/seahub_settings.py")}
 end
 
-ADMIN_EMAIL = "devops@cybera.ca"
-ADMIN_PWD = "cyb3ra"
-ADMIN_PWD_HASH = Digest::SHA1.hexdigest(ADMIN_PWD)
-
-directory "#{TOPDIR}/PeerMgr/"
+directory "#{node[:seafile][:ccnet][:configdir]}/PeerMgr"
 
 QUERY = <<-SQL
 CREATE TABLE IF NOT EXISTS EmailUser (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, email TEXT, passwd TEXT, is_staff bool NOT NULL, is_active bool NOT NULL, ctime INTEGER);
-INSERT INTO EmailUser(email, passwd, is_staff, is_active, ctime) VALUES (\"#{ADMIN_EMAIL}\", \"#{ADMIN_PWD_HASH}\", 1, 1, 0);
+INSERT INTO EmailUser(email, passwd, is_staff, is_active, ctime) VALUES (\"#{ node[:seafile][:seahub][:login] }\", \"#{ Digest::SHA1.hexdigest(node[:seafile][:seahub][:password]) }\", 1, 1, 0);
 SQL
 
+puts node[:seafile][:seahub][:password]
+puts QUERY
+
 execute "create usermgr db" do
-    command "/usr/bin/sqlite3 #{TOPDIR}/PeerMgr/usermgr.db '#{QUERY}'"
-    not_if { ::File.exists?("#{TOPDIR}/PeerMgr/usermgr.db")}
+    command "/usr/bin/sqlite3 #{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db '#{QUERY}'"
+    not_if { ::File.exists?("#{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db") }
 end
 
-env = {"PYTHONPATH" => "#{INSTALLPATH}/seafile/lib/python2.6/site-packages:#{INSTALLPATH}/seafile/lib64/python2.6/site-packages:#{INSTALLPATH}/seafile/lib/python2.7/site-packages:#{INSTALLPATH}/seafile/lib64/python2.7/site-packages:#{INSTALLPATH}/seahub/thirdpart:#{ENV["PYTHONPATH"]}",
-       "CCNET_CONF_DIR" => "#{TOPDIR}/ccnet",
-       "SEAFILE_CONF_DIR" => "/srv/seafile-data" }
+env = {"PYTHONPATH" => "#{SERVERDIR}/seafile/lib/python2.6/site-packages:#{SERVERDIR}/seafile/lib64/python2.6/site-packages:#{SERVERDIR}/seafile/lib/python2.7/site-packages:#{SERVERDIR}/seafile/lib64/python2.7/site-packages:#{SERVERDIR}/seahub/thirdpart:#{ENV["PYTHONPATH"]}",
+       "CCNET_CONF_DIR" => "#{node[:seafile][:ccnet][:configdir]}",
+       "SEAFILE_CONF_DIR" => "#{node[:seafile][:datadir]}" }
 
 execute "create django db" do
-    cwd "#{INSTALLPATH}/seahub"
+    cwd "#{SERVERDIR}/seahub"
     environment env
     command "/usr/bin/python2 manage.py syncdb"
 end
 
-directory "#{TOPDIR}/seahub-data"
+directory node[:seafile][:seahub][:datadir]
 
 execute "move avatars folder" do
-    command "mv #{INSTALLPATH}/seahub/media/avatars #{TOPDIR}/seahub-data/avatars"
-    not_if { ::File.exists?("#{TOPDIR}/seahub-data/avatars")}
+    command "mv #{SERVERDIR}/seahub/media/avatars #{node[:seafile][:seahub][:datadir]}/avatars"
+    not_if { ::File.exists?("#{node[:seafile][:seahub][:datadir]}/avatars") }
 end
 
-link "#{INSTALLPATH}/seahub/media/avatars" do
-    to "#{TOPDIR}/seahub-data/avatars"
-    not_if { ::File.exists?("#{TOPDIR}/seahub-data/avatars")}
+link "#{SERVERDIR}/seahub/media/avatars" do
+    to "#{node[:seafile][:seahub][:datadir]}/avatars"
+    not_if { ::File.exists?("#{node[:seafile][:seahub][:datadir]}/avatars") }
 end
 
-directory "/srv/seafile-data/library-template"
+directory "#{node[:seafile][:datadir]}/library-template"
 
 execute "copy user docs" do
-    command "cp -f #{INSTALLPATH}/seafile/docs/*.doc /srv/seafile-data/library-template/"
+    command "cp -f #{SERVERDIR}/seafile/docs/*.doc #{node[:seafile][:datadir]}/library-template/"
 end
 
 # service "seafile" do
