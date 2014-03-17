@@ -13,20 +13,27 @@ def get_transport(name):
 
 
 def get_destinations(folder):
-    destinations = configparser.ConfigParser(folder.path())
+    """ Gets destinations names from folder conf and returns full details """
+    folder_dsts = configparser.ConfigParser()
+    folder_dsts.read(folder.path() + '/folder.conf')
+    destinations = []
+    for dst_name in folder_dsts:
+        dst = conf.destinations.get(dst_name)
+        if dst is not None:
+            destinations.append(dst)
     return destinations
 
 
 def start(folder):
     destinations = get_destinations(folder)
-
-    for dst_name, dst_config in destinations:
-        transport_name = conf.destinations[dst_name]['transport']
+    for dst in destinations:
+        # TODO: Check whether this is home or transit dtn
+        transport_name = dst['transport']
         transport = get_transport(transport_name)
-        db.Transfer.create(folder=folder, destination=dst_name)
-        handle = transport.start_transfer(folder.path(), dst_config['url'])
+        db.Transfer.create(folder=folder, destination=dst)
+        handle = transport.start_transfer(folder.path(), dst['url'])
         transfers[id(handle)] = handle
 
 
 def check():
-    """ Check status of all transfers and restart if needed """
+    """ Check all tranfers for failure and restart if needed """

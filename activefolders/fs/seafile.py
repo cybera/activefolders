@@ -1,11 +1,9 @@
-from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import datetime
 import peewee
 import activefolders.conf as conf
 import activefolders.utils as utils
 import activefolders.controllers.folders as folders
-
-observer = None
 
 
 class SeafileHandler(FileSystemEventHandler):
@@ -22,7 +20,9 @@ class SeafileHandler(FileSystemEventHandler):
         """ Handles changes to folder contents """
         folder = self.get_folder(event)
         if folder is not None:
-            # TODO: Mark folder as dirty
+            folder.dirty = True
+            folder.last_change = datetime.datetime.now()
+            folder.save()
             pass
 
     def on_deleted(self, event):
@@ -63,19 +63,3 @@ class SeafileHandler(FileSystemEventHandler):
             # Folder somehow wasn't added on creation
             folder = folders.add(uuid)
         return folder
-
-
-def start():
-    global observer
-    if observer is None:
-        path = conf.settings['dtnd']['storage_path']
-        event_handler = SeafileHandler()
-        observer = Observer()
-        observer.schedule(event_handler, path, recursive=True)
-
-    observer.start()
-
-
-def stop():
-    observer.stop()
-    observer.join()

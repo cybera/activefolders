@@ -2,12 +2,12 @@ import peewee
 import activefolders.conf as conf
 import activefolders.utils as utils
 
-deferred_db = peewee.SqliteDatabase(None, fields={'text': 'text'})
+database = peewee.SqliteDatabase(None, fields={'text': 'text'})
 
 
 class BaseModel(peewee.Model):
     class Meta:
-        database = deferred_db
+        database = database
 
 
 class UUIDField(peewee.Field):
@@ -19,6 +19,9 @@ class UUIDField(peewee.Field):
 
 class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
+    dirty = peewee.BooleanField()
+    last_change = peewee.DateTimeField()
+    home_dtn = peewee.TextField()
 
     def path(self):
         path = conf.settings['dtnd']['storage_path'] + '/' + self.uuid
@@ -28,10 +31,10 @@ class Folder(BaseModel):
 class Transfer(BaseModel):
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
-    completed = peewee.BooleanField(default=False)
+    complete = peewee.BooleanField(default=False)
 
 
 def init():
-    deferred_db.init(conf.settings['dtnd']['db_path'])
+    database.init(conf.settings['dtnd']['db_path'])
     Transfer.create_table(fail_silently=True)
     Folder.create_table(fail_silently=True)

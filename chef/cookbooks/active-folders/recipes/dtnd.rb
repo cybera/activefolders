@@ -52,8 +52,21 @@ end
 package "python3"
 package "python3-pip"
 
-template "/etc/activefolders.conf" do
+directory "/etc/activefolders" do
+    owner "root"
+    group "root"
+    mode "0755"
+end
+
+template "/etc/activefolders/activefolders.conf" do
     source "activefolders.conf.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+end
+
+template "/etc/activefolders/destinations.conf" do
+    source "destinations.conf.erb"
     owner "root"
     group "root"
     mode "0644"
