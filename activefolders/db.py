@@ -20,7 +20,7 @@ class UUIDField(peewee.Field):
 class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
     dirty = peewee.BooleanField()
-    last_change = peewee.DateTimeField()
+    last_changed = peewee.DateTimeField()
     home_dtn = peewee.TextField()
 
     def path(self):
@@ -29,9 +29,10 @@ class Folder(BaseModel):
 
 
 class Transfer(BaseModel):
+    # TODO: Make unique key
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
-    complete = peewee.BooleanField(default=False)
+    pending = peewee.BooleanField(default=False)
 
 
 def init():

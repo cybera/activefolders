@@ -42,6 +42,8 @@ def check():
     """ Initiate transfers on any dirty folders """
     folders = db.Folder.select()
     for folder in folders:
-        time_delta = datetime.datetime.now() - folder.last_change
+        time_delta = datetime.datetime.now() - folder.last_changed
         if folder.dirty and time_delta.total_seconds() > 60:
-            transfers.start(folder)
+            transfers.add_all(folder)
+            folder.dirty = False
+            folder.save()
