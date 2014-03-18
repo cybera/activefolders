@@ -9,7 +9,8 @@ import activefolders.controllers.folders as folders
 class SeafileHandler(FileSystemEventHandler):
     def on_created(self, event):
         """ Handles folder creation """
-        if len(event.src_path.split('/')) != 2:
+        rel_path = self.get_relative_path(event)
+        if len(rel_path.split('/')) != 2:
             # Not a new library
             return
         uuid = self.get_library_id(event)
@@ -27,7 +28,8 @@ class SeafileHandler(FileSystemEventHandler):
 
     def on_deleted(self, event):
         """ Handles folder deletion """
-        if len(event.src_path.split('/')) != 2:
+        rel_path = self.get_relative_path(event)
+        if len(rel_path.split('/')) != 2:
             # Not a deleted library
             return
         folder = self.get_folder(event)
@@ -63,3 +65,32 @@ class SeafileHandler(FileSystemEventHandler):
             # Folder somehow wasn't added on creation
             folder = folders.add(uuid)
         return folder
+
+
+class SeafilePollingHandler(SeafileHandler):
+    def on_created(self, event):
+        """ Handles folder/file creation """
+        rel_path = self.get_relative_path(event)
+        if len(rel_path.split('/')) == 2:
+            uuid = self.get_library_id(event)
+            if uuid is not None:
+                folders.add(uuid)
+        else:
+            folder = self.get_folder(event)
+            folder.dirty = True
+            folder.last_changed = datetime.datetime.now()
+
+    def on_deleted(self, event):
+        """ Handles folder/file deletion """
+        rel_path = self.get_relative_path(event)
+        folder = self.get_folder(event)
+        if folder is None:
+            return
+        if len(rel_path.split('/')) == 2:
+            folders.remove(folder['uuid'])
+        else:
+            folder.dirty = True
+            folder.last_changed = datetime.datetime.now()
+
+    def on_modified(self, event):
+        pass
