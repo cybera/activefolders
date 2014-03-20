@@ -1,0 +1,62 @@
+# Choices can be found here:
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+# although not all choices may be available on all operating systems.
+# If running in a Windows environment this must be set to the same as your
+# system time zone.
+TIME_ZONE = 'UTC'
+
+# Set this to seahub website's URL. This URL is contained in email notifications.
+SITE_BASE = '<%= @config[:site_base] %>'
+
+# Set this to your website's name. This is contained in email notifications.
+SITE_NAME = '<%= @config[:site_name] %>'
+
+# Set seahub website's title
+SITE_TITLE = 'Active Folders'
+
+# If you don't want to run seahub website on your site's root path, set this option to your preferred path.
+# e.g. setting it to '/seahub/' would run seahub on http://example.com/seahub/.
+SITE_ROOT = '/'
+
+# Whether to use pdf.js to view pdf files online. Default is `True`,  you can turn it off.
+# NOTE: since version 1.4.
+USE_PDFJS = True
+
+# Enalbe or disalbe registration on web. Default is `False`.
+# NOTE: since version 1.4.
+ENABLE_SIGNUP = <%= @config[:open_signup].to_s.capitalize %>
+
+# Activate or deactivate user when registration complete. Default is `True`.
+# If set to `False`, new users need to be activated by admin in admin panel.
+# NOTE: since version 1.8
+ACTIVATE_AFTER_REGISTRATION = True
+
+# Whether to send email when a system admin adding a new member. Default is `True`.
+# NOTE: since version 1.4.
+SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = True
+
+ # Whether to send email when a system admin resetting a user's password. Default is `True`.
+# NOTE: since version 1.4.
+SEND_EMAIL_ON_RESETTING_USER_PASSWD = True
+
+# Hide `Organization` tab.
+# If you want your private seafile behave exactly like https://cloud.seafile.com/, you can set this flag.
+CLOUD_MODE = False
+
+# Online preview maximum file size, defaults to 30M.
+FILE_PREVIEW_MAX_SIZE = 30 * 1024 * 1024
+
+# Age of cookie, in seconds (default: 2 weeks).
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7 * 2
+
+# Whether to save the session data on every request.
+SESSION_SAVE_EVERY_REQUEST = False
+
+# Whether a user's session cookie expires when the Web browser is closed.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# Using server side crypto by default, otherwise, let user choose crypto method.
+FORCE_SERVER_CRYPTO = True
+
+# Secret key
+SECRET_KEY = '<%= @secret_key %>'

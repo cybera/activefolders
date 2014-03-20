@@ -21,3 +21,7 @@ default[:seafile][:seahub][:port] = 8000
 default[:seafile][:seahub][:host] = "0.0.0.0"
 default[:seafile][:seahub][:datadir] = "/srv/seahub"
 default[:seafile][:seahub][:peermgrdir] = node[:seafile][:ccnet][:configdir] + "/PeerMgr"
+
+default[:seafile][:seahub][:config][:open_signup] = true
+default[:seafile][:seahub][:config][:site_name] = "example.com"
+default[:seafile][:seahub][:config][:site_base] = "http://www." + node[:seafile][:seahub][:config][:site_name] +"/"

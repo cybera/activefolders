@@ -19,6 +19,7 @@
 # under the License.
 # -----------------------------------------------------------------------
 require 'digest/sha1'
+require 'securerandom'
 
 include_recipe "active-folders::default"
 
@@ -28,7 +29,7 @@ end
 
 remote_file "/tmp/seafile.tar.gz" do
     source "https://bitbucket.org/haiwen/seafile/downloads/seafile-server_#{node[:seafile][:version]}_x86-64.tar.gz"
-    not_if { ::File.exists?("/tmp/seafile.tar.gz")}
+    not_if { ::File.exists?("/tmp/seafile.tar.gz") }
 end
 
 directory node[:seafile][:installpath]
@@ -50,13 +51,13 @@ env = {"LD_LIBRARY_PATH" => "#{SERVERDIR}/seafile/lib/:#{SERVERDIR}/seafile/lib6
 execute "ccnet-init" do
     command "#{SERVERDIR}/seafile/bin/ccnet-init -c #{node[:seafile][:ccnet][:configdir]} --name '#{node[:seafile][:ccnet][:name]}' --port #{node[:seafile][:ccnet][:port]} --host #{node[:seafile][:ccnet][:host]}"
     environment env
-    not_if { ::File.exists?("#{node[:seafile][:ccnet][:configdir]}/ccnet.conf")}
+    creates "#{node[:seafile][:ccnet][:configdir]}/ccnet.conf"
 end
 
 execute "seafile-server-init" do
     command "#{SERVERDIR}/seafile/bin/seaf-server-init --seafile-dir #{node[:seafile][:datadir]} --port #{node[:seafile][:port]} --httpserver-port #{node[:seafile][:httpport]}"
     environment env
-    not_if { ::File.exists?("#{node[:seafile][:datadir]}/seafile.conf")}
+    creates "#{node[:seafile][:datadir]}/seafile.conf"
 end
 
 
@@ -72,9 +73,12 @@ end
 
 
 # Seahub config
-execute "seahub_settings" do
-    command "python #{SERVERDIR}/seahub/tools/secret_key_generator.py #{node[:seafile][:installpath]}/seahub_settings.py"
-    not_if { ::File.exists?("#{node[:seafile][:installpath]}/seahub_settings.py")}
+
+template "#{node[:seafile][:installpath]}/seahub_settings.py" do
+    source "seahub_settings.py.erb"
+    # Check #{SERVERDIR}/seahub/tools/secret_key_generator.py for a reference
+    variables(  :secret_key => SecureRandom.urlsafe_base64(40),
+                :config => node[:seafile][:seahub][:config] )
 end
 
 directory "#{node[:seafile][:ccnet][:configdir]}/PeerMgr"
@@ -86,7 +90,7 @@ SQL
 
 execute "create usermgr db" do
     command "/usr/bin/sqlite3 #{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db '#{QUERY}'"
-    not_if { ::File.exists?("#{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db") }
+    creates "#{node[:seafile][:ccnet][:configdir]}/PeerMgr/usermgr.db"
 end
 
 env = {"PYTHONPATH" => "#{SERVERDIR}/seafile/lib/python2.6/site-packages:#{SERVERDIR}/seafile/lib64/python2.6/site-packages:#{SERVERDIR}/seafile/lib/python2.7/site-packages:#{SERVERDIR}/seafile/lib64/python2.7/site-packages:#{SERVERDIR}/seahub/thirdpart:#{ENV["PYTHONPATH"]}",
@@ -103,18 +107,19 @@ directory node[:seafile][:seahub][:datadir]
 
 execute "move avatars folder" do
     command "mv #{SERVERDIR}/seahub/media/avatars #{node[:seafile][:seahub][:datadir]}/avatars"
-    not_if { ::File.exists?("#{node[:seafile][:seahub][:datadir]}/avatars") }
+    creates "#{node[:seafile][:seahub][:datadir]}/avatars"
 end
 
 link "#{SERVERDIR}/seahub/media/avatars" do
     to "#{node[:seafile][:seahub][:datadir]}/avatars"
-    not_if { ::File.exists?("#{node[:seafile][:seahub][:datadir]}/avatars") }
+    not_if { ::File.exists?("#{SERVERDIR}/seahub/media/avatars") }
 end
 
 directory "#{node[:seafile][:datadir]}/library-template"
 
 execute "copy user docs" do
     command "cp -f #{SERVERDIR}/seafile/docs/*.doc #{node[:seafile][:datadir]}/library-template/"
+    creates "#{node[:seafile][:datadir]}/library-template/*.doc"
 end
 
 template "/etc/init.d/seafile" do
