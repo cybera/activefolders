@@ -48,7 +48,7 @@ def stop_transfer(proc):
     return proc.kill()
 
 
-def transfer_is_success(proc):
+def transfer_success(proc):
     LOG.debug("Checking transfer process {}".format(id(proc)))
     retcode = proc.poll()
     if retcode is None:
