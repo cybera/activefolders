@@ -77,7 +77,7 @@ end
 template "#{node[:seafile][:installpath]}/seahub_settings.py" do
     source "seahub_settings.py.erb"
     # Check #{SERVERDIR}/seahub/tools/secret_key_generator.py for a reference
-    variables(  :secret_key => SecureRandom.urlsafe_base64(40),
+    variables(  :secret_key => SecureRandom.hex(40),
                 :config => node[:seafile][:seahub][:config] )
 end
 
