@@ -4,6 +4,6 @@
                      "seahub": {
                                  "port": 80
                      }
-        }
+        },
         "run_list": [ "recipe[active-folders::seafile]" ]
       }
