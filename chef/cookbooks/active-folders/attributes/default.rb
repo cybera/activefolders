@@ -17,7 +17,7 @@ default[:seafile][:ccnet][:configdir] = node[:seafile][:installpath] + "/ccnet"
 
 default[:seafile][:seahub][:login] = "devops@cybera.ca"
 default[:seafile][:seahub][:password] = "cyb3ra"
-default[:seafile][:seahub][:port] = 8000
+default[:seafile][:seahub][:port] = 80
 default[:seafile][:seahub][:host] = "0.0.0.0"
 default[:seafile][:seahub][:datadir] = "/srv/seahub"
 default[:seafile][:seahub][:peermgrdir] = node[:seafile][:ccnet][:configdir] + "/PeerMgr"

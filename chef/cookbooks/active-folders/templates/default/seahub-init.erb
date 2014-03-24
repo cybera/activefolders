@@ -113,7 +113,7 @@ if [[ ($1 == "start" || $1 == "restart" || $1 == "start-fastcgi" || $1 == "resta
         port=$2
         validate_port
     else
-        port=8000
+        port=<%= node[:seafile][:seahub][:port] %>
     fi
 elif [[ $1 == "stop" && $# == 1 ]]; then
     dummy=dummy
