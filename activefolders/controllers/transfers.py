@@ -5,7 +5,7 @@ import threading
 import activefolders.conf as conf
 import activefolders.db as db
 
-transfers = {}
+handles = {}
 
 
 def get_transport(name):
@@ -15,7 +15,7 @@ def get_transport(name):
 
 
 def get_destinations(folder):
-    """ Gets destinations names from folder conf and returns full details """
+    """ Gets destination names from folder conf and returns full details """
     folder_dsts = configparser.ConfigParser()
     folder_dsts.read(folder.path() + '/folder.conf')
     destinations = []
@@ -31,7 +31,7 @@ def start(transfer):
     transport_name = conf.destinations[transfer.destination]['transport']
     transport = get_transport(transport_name)
     handle = transport.start_transfer(transfer.folder.path(), transfer.destination['url'])
-    transfers[id(handle)] = handle
+    handles[transfer.id] = handle
     transfer.pending = False
     transfer.save()
 
@@ -52,15 +52,18 @@ def add_all(folder):
 
 
 def check():
-    """ Check all tranfers for failure and initiate pending ones """
-    active_transfers = db.Transfer.select().where(db.Transfer.pending=False)
-    pending_transfers = db.Transfer.select().where(db.Transfer.pending=True)
-    for transfer in active_transfers:
-        # TODO: Check status
-        pass
+    """ Check all current and pending transfers """
+    for transfer_id, handle in handles:
+        transfer = db.Transfer.get(db.Transfer.id==transfer_id)
+        dst = conf.destinations[transfer.destination]
+        transport = get_transport(dst['transport'])
+        if transport.transfer_success(handle):
+            transfer.delete_instance()
+
+    pending_transfers = db.Transfer.select().where(db.Transfer.pending==True)
     for transfer in pending_transfers:
         try:
-            active_transfer = db.Transfer.get(db.Transfer.folder=transfer.folder, db.Transfer.destination=transfer.dst, pending=False)
+            db.Transfer.get(db.Transfer.folder==transfer.folder, db.Transfer.destination==transfer.dst, db.Transfer.pending==False)
         except peewee.DoesNotExist:
             start(transfer)
     threading.Timer(20, check).start()

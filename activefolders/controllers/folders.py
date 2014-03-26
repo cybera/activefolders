@@ -34,6 +34,7 @@ def add(uuid):
 
 @db.database.commit_on_success
 def remove(uuid):
+    # TODO: Remove outstanding transfers
     uuid = utils.coerce_uuid(uuid)
     db.Folder.get(db.Folder.uuid == uuid).delete_instance()
     shutil.rmtree(conf.settings['dtnd']['storage_path'] + '/' + uuid)
