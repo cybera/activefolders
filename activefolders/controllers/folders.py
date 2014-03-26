@@ -1,6 +1,7 @@
 import os
 import shutil
 import datetime
+import threading
 import activefolders.db as db
 import activefolders.conf as conf
 import activefolders.controllers.transfers as transfers
@@ -47,3 +48,4 @@ def check():
             transfers.add_all(folder)
             folder.dirty = False
             folder.save()
+    threading.Timer(20, check).start()

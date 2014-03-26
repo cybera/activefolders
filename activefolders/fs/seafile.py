@@ -79,6 +79,7 @@ class SeafilePollingHandler(SeafileHandler):
             folder = self.get_folder(event)
             folder.dirty = True
             folder.last_changed = datetime.datetime.now()
+            folder.save()
 
     def on_deleted(self, event):
         """ Handles folder/file deletion """
@@ -91,6 +92,7 @@ class SeafilePollingHandler(SeafileHandler):
         else:
             folder.dirty = True
             folder.last_changed = datetime.datetime.now()
+            folder.save()
 
     def on_modified(self, event):
         pass

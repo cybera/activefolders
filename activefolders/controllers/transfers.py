@@ -1,6 +1,7 @@
 import importlib
 import configparser
 import peewee
+import threading
 import activefolders.conf as conf
 import activefolders.db as db
 
@@ -18,7 +19,7 @@ def get_destinations(folder):
     folder_dsts = configparser.ConfigParser()
     folder_dsts.read(folder.path() + '/folder.conf')
     destinations = []
-    for dst_name in folder_dsts:
+    for dst_name, dst_conf in folder_dsts:
         dst = conf.destinations.get(dst_name)
         if dst is not None:
             destinations.append(dst)
@@ -62,3 +63,4 @@ def check():
             active_transfer = db.Transfer.get(db.Transfer.folder=transfer.folder, db.Transfer.destination=transfer.dst, pending=False)
         except peewee.DoesNotExist:
             start(transfer)
+    threading.Timer(20, check).start()
