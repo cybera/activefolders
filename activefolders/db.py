@@ -1,4 +1,5 @@
 import peewee
+import datetime
 import activefolders.conf as conf
 import activefolders.utils as utils
 
@@ -19,9 +20,9 @@ class UUIDField(peewee.Field):
 
 class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
-    dirty = peewee.BooleanField()
-    last_changed = peewee.DateTimeField()
-    home_dtn = peewee.TextField()
+    dirty = peewee.BooleanField(default=False)
+    last_changed = peewee.DateTimeField(default=datetime.datetime.now)
+    home_dtn = peewee.TextField(null=True)
 
     def path(self):
         path = conf.settings['dtnd']['storage_path'] + '/' + self.uuid

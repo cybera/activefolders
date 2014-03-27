@@ -9,20 +9,26 @@ import activefolders.utils as utils
 
 
 def get_all():
-    # folders = {"folders": []}
-    # for folder in db.Folder.select().dicts():
-    #     folders['folders'].append(folder)
-    # return folders
     folders = db.Folder.select()
     return folders
 
+def get_all_dicts():
+    folders = {"folders": []}
+    for folder in db.Folder.select().dicts():
+        folder['last_changed'] = str(folder['last_changed'])
+        folders['folders'].append(folder)
+    return folders
 
 def get(uuid):
     uuid = utils.coerce_uuid(uuid)
-    # folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
     folder = db.Folder.get(db.Folder.uuid == uuid)
     return folder
 
+def get_dict(uuid):
+    uuid = utils.coerce_uuid(uuid)
+    folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
+    folder['last_changed'] = str(folder['last_changed'])
+    return folder
 
 @db.database.commit_on_success
 def add(uuid):

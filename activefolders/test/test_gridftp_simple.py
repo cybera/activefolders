@@ -20,9 +20,9 @@ class TransferTest(test.TestCase):
     def test_transfer(self):
         proc = transport.start_transfer(src=self.src_file,
                                         dst=self.dst+self.dst_file)
-        while transport.transfer_is_success(proc) is None:
+        while transport.transfer_success(proc) is None:
             sleep(0.2)
-        self.assertTrue(transport.transfer_is_success(proc))
+        self.assertTrue(transport.transfer_success(proc))
         self.assertTrue(os.path.isfile(self.dst_file))
 
     def tearDown(self):
