@@ -1,9 +1,11 @@
 import importlib
 import configparser
+import peewee
+import threading
 import activefolders.conf as conf
 import activefolders.db as db
 
-transfers = {}
+handles = {}
 
 
 def get_transport(name):
@@ -13,20 +15,55 @@ def get_transport(name):
 
 
 def get_destinations(folder):
-    destinations = configparser.ConfigParser(folder.path())
+    """ Gets destination names from folder conf and returns full details """
+    folder_dsts = configparser.ConfigParser()
+    folder_dsts.read(folder.path() + '/folder.conf')
+    destinations = []
+    for dst_name, dst_conf in folder_dsts:
+        dst = conf.destinations.get(dst_name)
+        if dst is not None:
+            destinations.append(dst)
     return destinations
 
 
-def start(folder):
-    destinations = get_destinations(folder)
+def start(transfer):
+    # TODO: Don't fail if there's an existing transfer
+    transport_name = conf.destinations[transfer.destination]['transport']
+    transport = get_transport(transport_name)
+    handle = transport.start_transfer(transfer.folder.path(), transfer.destination['url'])
+    handles[transfer.id] = handle
+    transfer.pending = False
+    transfer.save()
 
-    for dst_name, dst_config in destinations:
-        transport_name = conf.destinations[dst_name]['transport']
-        transport = get_transport(transport_name)
-        db.Transfer.create(folder=folder, destination=dst_name)
-        handle = transport.start_transfer(folder.path(), dst_config['url'])
-        transfers[id(handle)] = handle
+
+def add(folder, destination):
+    # TODO: Check whether this is home or transit dtn
+    try:
+        db.Transfer.create(folder=folder, destination=destination, pending=True)
+    except peewee.IntegrityError:
+        # Transfer already pending
+        return
+
+
+def add_all(folder):
+    destinations = get_destinations(folder)
+    for dst in destinations:
+        add(folder, dst)
 
 
 def check():
-    """ Check status of all transfers and restart if needed """
+    """ Check all current and pending transfers """
+    for transfer_id, handle in handles:
+        transfer = db.Transfer.get(db.Transfer.id==transfer_id)
+        dst = conf.destinations[transfer.destination]
+        transport = get_transport(dst['transport'])
+        if transport.transfer_success(handle):
+            transfer.delete_instance()
+
+    pending_transfers = db.Transfer.select().where(db.Transfer.pending==True)
+    for transfer in pending_transfers:
+        try:
+            db.Transfer.get(db.Transfer.folder==transfer.folder, db.Transfer.destination==transfer.dst, db.Transfer.pending==False)
+        except peewee.DoesNotExist:
+            start(transfer)
+    threading.Timer(20, check).start()

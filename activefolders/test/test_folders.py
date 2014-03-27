@@ -7,7 +7,7 @@ import activefolders.test.utils as testutils
 import activefolders.utils as utils
 
 
-class ControllerTest(test.TestCase):
+class FoldersTest(test.TestCase):
     uuids = None
 
     @classmethod
@@ -19,21 +19,21 @@ class ControllerTest(test.TestCase):
         testutils.clear_database()
         self.uuids = None
 
-    def test_folders(self):
-        all_folders = folders.get_all()
+    def test_get_all_dicts(self):
+        all_folders = folders.get_all_dicts()
         self.assertEqual(len(all_folders['folders']), 0)
         self.uuids = testutils.populate_database(5)
-        all_folders = folders.get_all()
+        all_folders = folders.get_all_dicts()
         self.assertEqual(len(all_folders['folders']), len(self.uuids))
         for folder in all_folders['folders']:
             self.assertTrue(folder['uuid'] in self.uuids)
 
-    def test_folder(self):
+    def test_get_dict(self):
         uuid = uuid4().hex
-        self.assertRaises(peewee.DoesNotExist, folders.get, uuid)
+        self.assertRaises(peewee.DoesNotExist, folders.get_dict, uuid)
         self.uuids = testutils.populate_database(1)
         try:
-            folder = folders.get(self.uuids[0])
+            folder = folders.get_dict(self.uuids[0])
         except:
             self.fail("folder() raised an exception unexpectedly")
         self.assertEqual(folder['uuid'], self.uuids[0])

@@ -1,17 +1,16 @@
-from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import datetime
 import peewee
 import activefolders.conf as conf
 import activefolders.utils as utils
 import activefolders.controllers.folders as folders
 
-observer = None
-
 
 class SeafileHandler(FileSystemEventHandler):
     def on_created(self, event):
         """ Handles folder creation """
-        if len(event.src_path.split('/')) != 2:
+        rel_path = self.get_relative_path(event)
+        if len(rel_path.split('/')) != 2:
             # Not a new library
             return
         uuid = self.get_library_id(event)
@@ -22,12 +21,15 @@ class SeafileHandler(FileSystemEventHandler):
         """ Handles changes to folder contents """
         folder = self.get_folder(event)
         if folder is not None:
-            # TODO: Mark folder as dirty
+            folder.dirty = True
+            folder.last_change = datetime.datetime.now()
+            folder.save()
             pass
 
     def on_deleted(self, event):
         """ Handles folder deletion """
-        if len(event.src_path.split('/')) != 2:
+        rel_path = self.get_relative_path(event)
+        if len(rel_path.split('/')) != 2:
             # Not a deleted library
             return
         folder = self.get_folder(event)
@@ -65,17 +67,32 @@ class SeafileHandler(FileSystemEventHandler):
         return folder
 
 
-def start():
-    global observer
-    if observer is None:
-        path = conf.settings['dtnd']['storage_path']
-        event_handler = SeafileHandler()
-        observer = Observer()
-        observer.schedule(event_handler, path, recursive=True)
+class SeafilePollingHandler(SeafileHandler):
+    def on_created(self, event):
+        """ Handles folder/file creation """
+        rel_path = self.get_relative_path(event)
+        if len(rel_path.split('/')) == 2:
+            uuid = self.get_library_id(event)
+            if uuid is not None:
+                folders.add(uuid)
+        else:
+            folder = self.get_folder(event)
+            folder.dirty = True
+            folder.last_changed = datetime.datetime.now()
+            folder.save()
 
-    observer.start()
+    def on_deleted(self, event):
+        """ Handles folder/file deletion """
+        rel_path = self.get_relative_path(event)
+        folder = self.get_folder(event)
+        if folder is None:
+            return
+        if len(rel_path.split('/')) == 2:
+            folders.remove(folder['uuid'])
+        else:
+            folder.dirty = True
+            folder.last_changed = datetime.datetime.now()
+            folder.save()
 
-
-def stop():
-    observer.stop()
-    observer.join()
+    def on_modified(self, event):
+        pass

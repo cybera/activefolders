@@ -23,7 +23,7 @@ def handle_errors():
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
-    all_folders = folders.get_all()
+    all_folders = folders.get_all_dicts()
     return all_folders
 
 
@@ -31,7 +31,7 @@ def get_folders():
 def get_folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
-        folder = folders.get(uuid)
+        folder = folders.get_dict(uuid)
     return folder
 
 
@@ -56,7 +56,7 @@ def delete_folder(uuid):
 def transfer_folder(uuid):
     """ Transfers a folder to another DTN """
     with handle_errors():
-        folder = folders.get(uuid)
+        folder = folders.get_dict(uuid)
         transfers.start(folder)
     return "Transfer initiated"
 

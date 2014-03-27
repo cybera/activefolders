@@ -1,13 +1,14 @@
 import peewee
+import datetime
 import activefolders.conf as conf
 import activefolders.utils as utils
 
-deferred_db = peewee.SqliteDatabase(None, fields={'text': 'text'})
+database = peewee.SqliteDatabase(None, fields={'text': 'text'})
 
 
 class BaseModel(peewee.Model):
     class Meta:
-        database = deferred_db
+        database = database
 
 
 class UUIDField(peewee.Field):
@@ -19,6 +20,9 @@ class UUIDField(peewee.Field):
 
 class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
+    dirty = peewee.BooleanField(default=False)
+    last_changed = peewee.DateTimeField(default=datetime.datetime.now)
+    home_dtn = peewee.TextField(null=True)
 
     def path(self):
         path = conf.settings['dtnd']['storage_path'] + '/' + self.uuid
@@ -26,12 +30,13 @@ class Folder(BaseModel):
 
 
 class Transfer(BaseModel):
+    # TODO: Make unique key
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
-    completed = peewee.BooleanField(default=False)
+    pending = peewee.BooleanField(default=False)
 
 
 def init():
-    deferred_db.init(conf.settings['dtnd']['db_path'])
+    database.init(conf.settings['dtnd']['db_path'])
     Transfer.create_table(fail_silently=True)
     Folder.create_table(fail_silently=True)
