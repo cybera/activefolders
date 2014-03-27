@@ -1,9 +1,12 @@
 from watchdog.events import FileSystemEventHandler
 import datetime
 import peewee
+import logging
 import activefolders.conf as conf
 import activefolders.utils as utils
 import activefolders.controllers.folders as folders
+
+LOG = logging.getLogger(__name__)
 
 
 class SeafileHandler(FileSystemEventHandler):
@@ -70,12 +73,15 @@ class SeafileHandler(FileSystemEventHandler):
 class SeafilePollingHandler(SeafileHandler):
     def on_created(self, event):
         """ Handles folder/file creation """
+        LOG.debug("file/folder created event")
         rel_path = self.get_relative_path(event)
         if len(rel_path.split('/')) == 2:
             uuid = self.get_library_id(event)
             if uuid is not None:
+                LOG.info("new seafile library detected, creating new folder")
                 folders.add(uuid)
         else:
+            LOG.info("file created in seafile library, marking as dirty")
             folder = self.get_folder(event)
             folder.dirty = True
             folder.last_changed = datetime.datetime.now()
@@ -83,13 +89,16 @@ class SeafilePollingHandler(SeafileHandler):
 
     def on_deleted(self, event):
         """ Handles folder/file deletion """
+        LOG.debug("file/folder deleted event")
         rel_path = self.get_relative_path(event)
         folder = self.get_folder(event)
         if folder is None:
             return
         if len(rel_path.split('/')) == 2:
+            LOG.info("seafile library deleted, deleting folder")
             folders.remove(folder['uuid'])
         else:
+            LOG.info("file deleted in seafile library, marking as dirty")
             folder.dirty = True
             folder.last_changed = datetime.datetime.now()
             folder.save()
