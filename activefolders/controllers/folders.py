@@ -14,7 +14,7 @@ def get_all():
 
 
 def get_all_dicts():
-    folders = {"folders": []}
+    folders = { "folders": [] }
     for folder in db.Folder.select().dicts():
         folder['last_changed'] = str(folder['last_changed'])
         folders['folders'].append(folder)

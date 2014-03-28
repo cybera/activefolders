@@ -58,6 +58,9 @@ def transfer_folder(uuid):
     with handle_errors():
         folder = folders.get_dict(uuid)
         transfers.start(folder)
+        dst = bottle.request.query.dst
+        transfer = transfers.add(folder, dst)
+        transfers.start(transfer)
     return "Transfer initiated"
 
 

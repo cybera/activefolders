@@ -39,10 +39,11 @@ def start(transfer):
 def add(folder, destination):
     # TODO: Check whether this is home or transit dtn
     try:
-        db.Transfer.create(folder=folder, destination=destination, pending=True)
+        transfer = db.Transfer.create(folder=folder, destination=destination, pending=True)
     except peewee.IntegrityError:
         # Transfer already pending
         return
+    return transfer
 
 
 def add_all(folder):
