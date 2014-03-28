@@ -56,8 +56,7 @@ def delete_folder(uuid):
 def transfer_folder(uuid):
     """ Transfers a folder to another DTN """
     with handle_errors():
-        folder = folders.get_dict(uuid)
-        transfers.start(folder)
+        folder = folders.get(uuid)
         dst = bottle.request.query.dst
         transfer = transfers.add(folder, dst)
         transfers.start(transfer)

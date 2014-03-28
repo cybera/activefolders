@@ -1,6 +1,5 @@
 from watchdog.events import FileSystemEventHandler
 import datetime
-import peewee
 import logging
 import activefolders.conf as conf
 import activefolders.utils as utils
@@ -62,11 +61,7 @@ class SeafileHandler(FileSystemEventHandler):
             uuid = self.get_library_id(event)
         except ValueError:
             return None
-        try:
-            folder = folders.get(uuid)
-        except peewee.DoesNotExist:
-            # Folder somehow wasn't added on creation
-            folder = folders.add(uuid)
+        folder = folders.get_or_create(uuid)
         return folder
 
 

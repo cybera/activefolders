@@ -27,10 +27,12 @@ def get_destinations(folder):
 
 
 def start(transfer):
-    # TODO: Don't fail if there's an existing transfer
-    transport_name = conf.destinations[transfer.destination]['transport']
+    # TODO: Fail if there's an existing transfer
+    # TODO: If sending to a dtn, register folder through api
+    dst_conf = conf.destinations[transfer.destination]
+    transport_name = dst_conf['transport']
     transport = get_transport(transport_name)
-    handle = transport.start_transfer(transfer.folder.path(), transfer.destination['url'])
+    handle = transport.start_transfer(transfer.folder.path(), dst_conf)
     handles[transfer.id] = handle
     transfer.pending = False
     transfer.save()

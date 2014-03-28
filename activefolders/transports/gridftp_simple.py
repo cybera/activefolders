@@ -19,8 +19,8 @@ if not os.path.isfile(BINARY):
     raise IOError("{} is not found".format(BINARY))
 
 
-def start_transfer(src,
-                   dst,
+def start_transfer(folder,
+                   dst_conf,
                    parallel_streams=4,
                    concurrent_files=4,
                    offset=None,
@@ -36,8 +36,8 @@ def start_transfer(src,
         opts += ["-len", str(length)]
 
     transfer = default_behaviour + opts
-    transfer.append(src)
-    transfer.append(dst)
+    transfer.append(folder.path() + '/')
+    transfer.append(dst_conf['url'] + folder.uuid + '/')
     proc = Popen(transfer, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
     LOG.debug("Initiated transfer {}:'{}'".format(id(proc), " ".join(transfer)))
     return proc
