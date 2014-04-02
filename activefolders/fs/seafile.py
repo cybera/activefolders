@@ -4,6 +4,7 @@ import logging
 import activefolders.conf as conf
 import activefolders.utils as utils
 import activefolders.controllers.folders as folders
+import activefolders.db as db
 
 LOG = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class SeafileHandler(FileSystemEventHandler):
             return
         folder = self.get_folder(event)
         if folder is not None:
-            folders.remove(folder['uuid'])
+            folders.remove(folder.uuid)
 
     def get_relative_path(self, event):
         """ Returns path relative to storage path """
@@ -61,7 +62,7 @@ class SeafileHandler(FileSystemEventHandler):
             uuid = self.get_library_id(event)
         except ValueError:
             return None
-        folder = folders.get_or_create(uuid)
+        folder = db.Folder.get_or_create(uuid=uuid)
         return folder
 
 
@@ -73,11 +74,11 @@ class SeafilePollingHandler(SeafileHandler):
         if len(rel_path.split('/')) == 2:
             uuid = self.get_library_id(event)
             if uuid is not None:
-                LOG.info("new seafile library detected, creating new folder")
+                LOG.info("new seafile library {} detected, creating new folder {}".format(event.src_path, uuid))
                 folders.add(uuid)
         else:
-            LOG.info("file created in seafile library, marking as dirty")
             folder = self.get_folder(event)
+            LOG.info("{} created in folder {}, marking as dirty".format(event.src_path, folder.uuid))
             folder.dirty = True
             folder.last_changed = datetime.datetime.now()
             folder.save()
@@ -90,10 +91,10 @@ class SeafilePollingHandler(SeafileHandler):
         if folder is None:
             return
         if len(rel_path.split('/')) == 2:
-            LOG.info("seafile library deleted, deleting folder")
-            folders.remove(folder['uuid'])
+            LOG.info("library deleted, deleting folder {}".format(folder.uuid))
+            folders.remove(folder.uuid)
         else:
-            LOG.info("file deleted in seafile library, marking as dirty")
+            LOG.info("{} deleted in folder {}, marking as dirty".format(event.src_path, folder.uuid))
             folder.dirty = True
             folder.last_changed = datetime.datetime.now()
             folder.save()
