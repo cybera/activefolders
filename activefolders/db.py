@@ -29,6 +29,13 @@ class Folder(BaseModel):
         return path
 
 
+class Destination(BaseModel):
+    # TODO: Make unique key
+    folder = peewee.ForeignKeyField(Folder)
+    destination = peewee.TextField()
+    status = peewee.TextField()
+
+
 class Transfer(BaseModel):
     # TODO: Make unique key
     folder = peewee.ForeignKeyField(Folder)
@@ -39,4 +46,5 @@ class Transfer(BaseModel):
 def init():
     database.init(conf.settings['dtnd']['db_path'])
     Transfer.create_table(fail_silently=True)
+    Destination.create_table(fail_silently=True)
     Folder.create_table(fail_silently=True)
