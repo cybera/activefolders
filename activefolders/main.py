@@ -2,7 +2,6 @@ from activefolders.utils import Daemon
 import logging
 import activefolders.api as api
 import activefolders.db as db
-import activefolders.fs.monitor as monitor
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 
@@ -16,7 +15,6 @@ class DtnDaemon(Daemon):
     def run(self):
         LOG.info("DTN daemon is starting")
         db.init()
-        monitor.start()
         folders.check()
         transfers.check()
         api.start()
