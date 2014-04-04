@@ -19,7 +19,6 @@ Vagrant.configure("2") do |config|
       config.vm.provision "chef_solo" do |chef|
         chef.cookbooks_path = "chef/cookbooks"
         chef.add_recipe "active-folders::dtnd"
-        chef.add_recipe "active-folders::seafile"
         chef.json = {
           "dtnd" => {
             "repository" => "/vagrant",
