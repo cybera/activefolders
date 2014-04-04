@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="activefolders",
-    version="0.0.1-SNAPSHOT",
+    version="0.0.2-SNAPSHOT",
     packages=find_packages(exclude=['test']),
     author="Cybera Inc.",
     author_email="devops@cybera.ca",
