@@ -9,7 +9,7 @@ import activefolders.conf as conf
 import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
 
-STORAGE_MODULE = "activefolders.storage.{}".format(conf.settings['storage_module'])
+STORAGE_MODULE = "activefolders.storage.{}".format(conf.settings['dtnd']['storage'])
 storage = importlib.import_module(STORAGE_MODULE)
 
 
