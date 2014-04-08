@@ -1,3 +1,4 @@
+from uuid import uuid4
 import os
 import shutil
 import datetime
@@ -35,7 +36,7 @@ def get_dict(uuid):
 
 
 @db.database.commit_on_success
-def add(uuid):
+def add(uuid=uuid4()):
     uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.create(uuid=uuid)
     os.mkdir(conf.settings['dtnd']['storage_path'] + '/' + uuid)
@@ -48,6 +49,26 @@ def remove(uuid):
     uuid = utils.coerce_uuid(uuid)
     db.Folder.get(db.Folder.uuid == uuid).delete_instance()
     shutil.rmtree(conf.settings['dtnd']['storage_path'] + '/' + uuid)
+
+
+def create_dir(uuid, path):
+    uuid = utils.coerce_uuid(uuid)
+    folder = db.Folder.get(db.Folder.uuid == uuid)
+    # TODO: Create dir on disk
+    return folder
+
+
+def add_destination(uuid, dst_name):
+    uuid = utils.coerce_uuid(uuid)
+    folder = db.Folder.get(db.Folder.uuid == uuid)
+    dst = conf.destinations[dst_name]
+    db.FolderDestination.create(folder=folder, destination=dst_name)
+
+
+def remove_destination(uuid, dst_name):
+    uuid = utils.coerce_uuid(uuid)
+    folder = db.Folder.get(db.Folder.uuid == uuid)
+    db.FolderDestination.delete(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
 
 
 def check():

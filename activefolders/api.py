@@ -2,7 +2,6 @@ from contextlib import contextmanager
 import bottle
 import peewee
 import activefolders.controllers.folders as folders
-import activefolders.controllers.transfers as transfers
 import activefolders.conf as conf
 
 app = bottle.Bottle()
@@ -20,6 +19,14 @@ def handle_errors():
         bottle.abort(404, "Folder not found")
 
 
+@app.post('/create_folder')
+def create_folder():
+    """ Creates new folder on the DTN """
+    folders.add()
+    bottle.response.status = 201
+    return "Folder added"
+
+
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
@@ -35,15 +42,6 @@ def get_folder(uuid):
     return folder
 
 
-@app.post('/folders/<uuid>')
-def add_folder(uuid):
-    """ Adds a new folder to the DTN """
-    with handle_errors():
-        folders.add(uuid)
-    bottle.response.status = 201
-    return "Folder added"
-
-
 @app.delete('/folders/<uuid>')
 def delete_folder(uuid):
     """ Deletes a folder from the DTN """
@@ -52,15 +50,79 @@ def delete_folder(uuid):
     return "Folder deleted"
 
 
-@app.post('/transfer/<uuid>')
-def transfer_folder(uuid):
-    """ Transfers a folder to another DTN """
+@app.get('/folders/<uuid>/delta')
+def delta(uuid):
+    pass
+
+
+@app.put('/folders/<uuid>/upload')
+def upload_file(uuid):
+    pass
+
+
+@app.post('/folders/<uuid>/fileops/create_dir')
+def create_dir(uuid):
+    path = bottle.request.query.path
+    folders.create_dir(uuid, path)
+    bottle.response.status = 201
+    return "Directory created"
+
+
+@app.post('/folders/<uuid>/fileops/delete')
+def delete(uuid):
+    path = bottle.request.query.path
+    folders.delete(uuid, path)
+    return "File/folder deleted"
+
+
+@app.post('/folders/<uuid>/fileops/copy')
+def copy(uuid):
+    cur_path = bottle.request.query.cur_path
+    new_path = bottle.request.query.new_path
+    folders.copy(uuid, cur_path, new_path)
+    return "File/folder copied"
+
+
+@app.post('/folders/<uuid>/fileops/move')
+def move(uuid):
+    cur_path = bottle.request.query.cur_path
+    new_path = bottle.request.query.new_path
+    folders.move(uuid, cur_path, new_path)
+    return "File/folder moved"
+
+
+@app.get('/destinations')
+def get_destinations():
+    return conf.destinations
+
+
+@app.get('/destinations/<name>')
+def get_destination(name):
+    try:
+        dst = conf.destinations[name]
+    except KeyError:
+        bottle.abort(404, "Destination not found")
+    return dst
+
+@app.get('/folders/<uuid>/destinations')
+def get_folder_destinations(uuid):
     with handle_errors():
-        folder = folders.get(uuid)
-        dst = bottle.request.query.dst
-        transfer = transfers.add(folder, dst)
-        transfers.start(transfer)
-    return "Transfer initiated"
+        destinations = folders.get_destinations(uuid)
+    return destinations
+
+
+@app.post('/folders/<uuid>/destinations')
+def add_folder_destination(uuid):
+    dst_name = bottle.request.query.dst
+    folders.add_destination(uuid, dst_name)
+    return "Destination added"
+
+
+@app.delete('/folders/<uuid>/destinations')
+def remove_folder_destination(uuid):
+    dst_name = bottle.request.query.dst
+    folders.remove_destination(uuid, dst_name)
+    return "Destination removed"
 
 
 def start():
