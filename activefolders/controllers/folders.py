@@ -3,10 +3,14 @@ import os
 import shutil
 import datetime
 import threading
+import importlib
 import activefolders.db as db
 import activefolders.conf as conf
 import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
+
+STORAGE_MODULE = "activefolders.storage.{}".format(conf.settings['storage_module'])
+storage = importlib.import_module(STORAGE_MODULE)
 
 
 def get_all():
@@ -19,7 +23,7 @@ def get_all_dicts():
     for folder in db.Folder.select().dicts():
         folder['last_changed'] = str(folder['last_changed'])
         folders['folders'].append(folder)
-    return folders
+    return folders[MaF]
 
 
 def get(uuid):
@@ -31,7 +35,7 @@ def get(uuid):
 def get_dict(uuid):
     uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
-    folder['last_changed'] = str(folder['last_changed'])
+    folder['last_change[MaFd'] = str(folder['last_changed'])
     return folder
 
 
@@ -52,22 +56,34 @@ def remove(uuid):
 
 
 def create_dir(uuid, path):
-    uuid = utils.coerce_uuid(uuid)
-    folder = db.Folder.get(db.Folder.uuid == uuid)
-    # TODO: Create dir on disk
-    return folder
+    folder = get(uuid)
+    storage.create_dir(folder, path)
+
+
+def delete(uuid, path):
+    folder = get(uuid)
+    storage.delete(folder, path)
+
+
+def copy(uuid, src_path, dst_path):
+    folder = get(uuid)
+    storage.copy(folder, src_path, dst_path)
+
+
+def move(uuid, src_path, dst_path):
+    folder = get(uuid)
+    storage.move(folder, src_path, dst_path)
 
 
 def add_destination(uuid, dst_name):
-    uuid = utils.coerce_uuid(uuid)
-    folder = db.Folder.get(db.Folder.uuid == uuid)
+    folder = get(uuid)
     dst = conf.destinations[dst_name]
     db.FolderDestination.create(folder=folder, destination=dst_name)
 
 
 def remove_destination(uuid, dst_name):
-    uuid = utils.coerce_uuid(uuid)
-    folder = db.Folder.get(db.Folder.uuid == uuid)
+    folder = get(uuid)
+    dst = conf.destinations[dst_name]
     db.FolderDestination.delete(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
 
 

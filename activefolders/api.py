@@ -13,6 +13,8 @@ def handle_errors():
         yield
     except ValueError:
         bottle.abort(400, "Invalid UUID")
+    except KeyError:
+        bottle.abort(404, "Destination not found")
     except peewee.IntegrityError:
         bottle.abort(403, "Folder already exists")
     except peewee.DoesNotExist:
@@ -62,14 +64,14 @@ def upload_file(uuid):
 
 @app.post('/folders/<uuid>/fileops/create_dir')
 def create_dir(uuid):
+    # TODO: Exception handling
     path = bottle.request.query.path
     folders.create_dir(uuid, path)
-    bottle.response.status = 201
-    return "Directory created"
 
 
 @app.post('/folders/<uuid>/fileops/delete')
 def delete(uuid):
+    # TODO: Exception handling
     path = bottle.request.query.path
     folders.delete(uuid, path)
     return "File/folder deleted"
@@ -77,17 +79,19 @@ def delete(uuid):
 
 @app.post('/folders/<uuid>/fileops/copy')
 def copy(uuid):
-    cur_path = bottle.request.query.cur_path
-    new_path = bottle.request.query.new_path
-    folders.copy(uuid, cur_path, new_path)
+    # TODO: Exception handling
+    src_path = bottle.request.query.src_path
+    dst_path = bottle.request.query.dst_path
+    folders.copy(uuid, src_path, dst_path)
     return "File/folder copied"
 
 
 @app.post('/folders/<uuid>/fileops/move')
 def move(uuid):
-    cur_path = bottle.request.query.cur_path
-    new_path = bottle.request.query.new_path
-    folders.move(uuid, cur_path, new_path)
+    # TODO: Exception handling
+    src_path = bottle.request.query.src_path
+    dst_path = bottle.request.query.dst_path
+    folders.move(uuid, src_path, dst_path)
     return "File/folder moved"
 
 
@@ -98,10 +102,8 @@ def get_destinations():
 
 @app.get('/destinations/<name>')
 def get_destination(name):
-    try:
+    with handle_errors():
         dst = conf.destinations[name]
-    except KeyError:
-        bottle.abort(404, "Destination not found")
     return dst
 
 @app.get('/folders/<uuid>/destinations')
@@ -114,14 +116,16 @@ def get_folder_destinations(uuid):
 @app.post('/folders/<uuid>/destinations')
 def add_folder_destination(uuid):
     dst_name = bottle.request.query.dst
-    folders.add_destination(uuid, dst_name)
+    with handle_errors():
+        folders.add_destination(uuid, dst_name)
     return "Destination added"
 
 
 @app.delete('/folders/<uuid>/destinations')
 def remove_folder_destination(uuid):
     dst_name = bottle.request.query.dst
-    folders.remove_destination(uuid, dst_name)
+    with handle_errors():
+        folders.remove_destination(uuid, dst_name)
     return "Destination removed"
 
 
