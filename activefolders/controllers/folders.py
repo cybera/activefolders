@@ -23,7 +23,7 @@ def get_all_dicts():
     for folder in db.Folder.select().dicts():
         folder['last_changed'] = str(folder['last_changed'])
         folders['folders'].append(folder)
-    return folders[MaF]
+    return folders
 
 
 def get(uuid):
@@ -35,7 +35,7 @@ def get(uuid):
 def get_dict(uuid):
     uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
-    folder['last_change[MaFd'] = str(folder['last_changed'])
+    folder['last_changed'] = str(folder['last_changed'])
     return folder
 
 
