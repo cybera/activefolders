@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import os
 import bottle
 import peewee
 import activefolders.controllers.folders as folders
@@ -59,7 +60,11 @@ def delta(uuid):
 
 @app.put('/folders/<uuid>/upload')
 def upload_file(uuid):
-    pass
+    upload = bottle.request.files.get('upload')
+    name, ext = os.path.splitext(upload.filename)
+    save_path = "/tmp/"
+    upload.save(save_path)  # appends upload.filename automatically
+    return 'OK'
 
 
 @app.post('/folders/<uuid>/fileops/create_dir')
