@@ -51,6 +51,7 @@ end
 
 package "python3"
 package "python3-pip"
+package "git"
 
 directory "/etc/activefolders" do
     owner "root"
@@ -70,6 +71,19 @@ template "/etc/activefolders/destinations.conf" do
     owner "root"
     group "root"
     mode "0644"
+end
+
+if node[:dtnd][:bottle_dev]
+  directory "/tmp/bottle"
+
+  git "/tmp/bottle" do
+    repository "https://github.com/defnull/bottle"
+    action :sync
+  end
+
+  execute "install bottle" do
+      command "pip3 install -e /tmp/bottle"
+  end
 end
 
 execute "install daemon" do
