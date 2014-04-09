@@ -21,7 +21,10 @@ def create_dir(folder, path):
 def copy(folder, src_path, dst_path):
     src_path = join_and_verify(folder, src_path)
     dst_path = join_and_verify(folder, dst_path)
-    shutil.copy(src_path, dst_path)
+    if os.path.isdir(src_path):
+        shutil.copytree(src_path, dst_path)
+    else:
+        shutil.copy(src_path, dst_path)
 
 
 def move(folder, src_path, dst_path):

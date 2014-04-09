@@ -104,27 +104,28 @@ def move(uuid):
 
 @app.get('/destinations')
 def get_destinations():
-    return conf.destinations
+    return conf.destinations._sections
 
 
 @app.get('/destinations/<name>')
 def get_destination(name):
     with handle_errors():
-        dst = conf.destinations[name]
+        dst = dict(conf.destinations[name].items())
     return dst
 
 @app.get('/folders/<uuid>/destinations')
 def get_folder_destinations(uuid):
     with handle_errors():
-        destinations = folders.get_destinations(uuid)
-    return destinations
+        dsts = folders.get_destinations(uuid)
+    return dsts
 
 
 @app.post('/folders/<uuid>/destinations')
 def add_folder_destination(uuid):
     dst_name = bottle.request.query.dst
     with handle_errors():
-        folders.add_destination(uuid, dst_name)
+        pass
+    folders.add_destination(uuid, dst_name)
     return "Destination added"
 
 
