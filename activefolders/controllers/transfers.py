@@ -1,5 +1,4 @@
 import importlib
-import configparser
 import peewee
 import threading
 import activefolders.conf as conf
@@ -16,13 +15,11 @@ def get_transport(name):
 
 def get_destinations(folder):
     """ Gets destination names from folder conf and returns full details """
-    folder_dsts = configparser.ConfigParser()
-    folder_dsts.read(folder.path() + '/folder.conf')
+    folder_dsts = db.FolderDestination.select().where(db.FolderDestination.folder == folder)
     destinations = []
-    for dst_name, dst_conf in folder_dsts:
-        dst = conf.destinations.get(dst_name)
-        if dst is not None:
-            destinations.append(dst)
+    for dst in folder_dsts:
+        dst = conf.destinations.get(dst.destination)
+        destinations.append(dst)
     return destinations
 
 

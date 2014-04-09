@@ -24,9 +24,9 @@ def handle_errors():
 @app.post('/create_folder')
 def create_folder():
     """ Creates new folder on the DTN """
-    folders.add()
+    folder = folders.add()
     bottle.response.status = 201
-    return "Folder added"
+    return folder.uuid
 
 
 @app.get('/folders')

@@ -1,9 +1,3 @@
-
-
-
-def create_dir(folder, path):
-    pass
-
 import os
 import shutil
 
@@ -13,6 +7,10 @@ def join_and_verify(folder, *args):
     path = os.path.realpath(path)
     # TODO: Verify path is below folder.path()
     return path
+
+
+def create_folder(folder):
+    os.mkdir(folder.path())
 
 
 def create_dir(folder, path):

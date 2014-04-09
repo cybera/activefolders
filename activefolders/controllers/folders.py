@@ -40,10 +40,12 @@ def get_dict(uuid):
 
 
 @db.database.commit_on_success
-def add(uuid=str(uuid4())):
+def add(uuid=None):
+    if uuid is None:
+        uuid = str(uuid4())
     uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.create(uuid=uuid)
-    os.mkdir(conf.settings['dtnd']['storage_path'] + '/' + uuid)
+    storage.create_folder(folder)
     return folder
 
 
@@ -75,16 +77,29 @@ def move(uuid, src_path, dst_path):
     storage.move(folder, src_path, dst_path)
 
 
+def get_destinations(uuid):
+    folder = get(uuid)
+    dst_dict = { "destinations": [] }
+    destinations = db.FolderDestination.select().where(db.FolderDestination.folder == folder).dicts()
+    for dst in destinations:
+        dst_dict[destinations].append(dst.destination)
+    return dst_dict
+
+
 def add_destination(uuid, dst_name):
     folder = get(uuid)
-    dst = conf.destinations[dst_name]
-    db.FolderDestination.create(folder=folder, destination=dst_name)
+    if dst_name in conf.destinations:
+        db.FolderDestination.create(folder=folder, destination=dst_name)
+    else:
+        raise KeyError
 
 
 def remove_destination(uuid, dst_name):
     folder = get(uuid)
-    dst = conf.destinations[dst_name]
-    db.FolderDestination.delete(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
+    if dst_name in conf.destinations:
+        db.FolderDestination.delete.where(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
+    else:
+        raise KeyError
 
 
 def check():
