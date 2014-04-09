@@ -40,7 +40,7 @@ def get_dict(uuid):
 
 
 @db.database.commit_on_success
-def add(uuid=uuid4()):
+def add(uuid=str(uuid4())):
     uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.create(uuid=uuid)
     os.mkdir(conf.settings['dtnd']['storage_path'] + '/' + uuid)
