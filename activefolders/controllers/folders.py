@@ -97,7 +97,7 @@ def add_destination(uuid, dst_name):
 def remove_destination(uuid, dst_name):
     folder = get(uuid)
     if dst_name in conf.destinations:
-        db.FolderDestination.delete.where(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
+        db.FolderDestination.delete().where(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
     else:
         raise KeyError
 
