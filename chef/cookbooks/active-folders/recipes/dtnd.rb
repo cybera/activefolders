@@ -77,7 +77,7 @@ if node[:dtnd][:bottle_dev]
   directory "/tmp/bottle"
 
   git "/tmp/bottle" do
-    repository "https://github.com/defnull/bottle"
+  repository "git://github.com/defnull/bottle.git"
     action :sync
   end
 
