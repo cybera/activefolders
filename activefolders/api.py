@@ -62,8 +62,10 @@ def delta(uuid):
 def upload_file(uuid):
     upload = bottle.request.files.get('upload')
     name, ext = os.path.splitext(upload.filename)
-    save_path = "/tmp/"
-    upload.save(save_path)  # appends upload.filename automatically
+    try:
+        folders.save_file(uuid, upload)
+    except IOError:
+        bottle.abort(403, "File already exists")
     return 'OK'
 
 

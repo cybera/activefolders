@@ -57,6 +57,11 @@ def remove(uuid):
     shutil.rmtree(conf.settings['dtnd']['storage_path'] + '/' + uuid)
 
 
+def save_file(uuid, upload):
+    folder = get(uuid)
+    storage.save_file(folder, upload)
+
+
 def create_dir(uuid, path):
     folder = get(uuid)
     storage.create_dir(folder, path)

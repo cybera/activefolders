@@ -36,3 +36,11 @@ def delete(folder, path):
         shutil.rmtree(path)
     else:
         os.remove(path)
+
+
+def save_file(folder, upload):
+    path = join_and_verify(folder, upload.filename)
+    if os.path.exists(path):
+        raise IOError("File exists!")
+    else:
+        upload.save(folder.path())
