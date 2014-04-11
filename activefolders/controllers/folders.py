@@ -1,6 +1,4 @@
 from uuid import uuid4
-import os
-import shutil
 import datetime
 import threading
 import importlib
@@ -52,9 +50,9 @@ def add(uuid=None):
 @db.database.commit_on_success
 def remove(uuid):
     # TODO: Remove outstanding transfers
-    uuid = utils.coerce_uuid(uuid)
-    db.Folder.get(db.Folder.uuid == uuid).delete_instance()
-    shutil.rmtree(conf.settings['dtnd']['storage_path'] + '/' + uuid)
+    folder = get(uuid)
+    folder.delete_instance()
+    storage.delete_folder(folder.path())
 
 
 def save_file(uuid, upload):
@@ -85,9 +83,9 @@ def move(uuid, src_path, dst_path):
 def get_destinations(uuid):
     folder = get(uuid)
     dst_dict = { "destinations": [] }
-    destinations = db.FolderDestination.select().where(db.FolderDestination.folder == folder).dicts()
+    destinations = db.FolderDestination.select().where(db.FolderDestination.folder == folder)
     for dst in destinations:
-        dst_dict[destinations].append(dst.destination)
+        dst_dict['destinations'].append(dst.destination)
     return dst_dict
 
 

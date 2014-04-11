@@ -13,6 +13,10 @@ def create_folder(folder):
     os.mkdir(folder.path())
 
 
+def delete_folder(folder):
+    shutil.rmtree(folder.path())
+
+
 def create_dir(folder, path):
     path = join_and_verify(folder, path)
     os.mkdir(path)
