@@ -37,7 +37,7 @@ def start_transfer(folder,
 
     transfer = default_behaviour + opts
     transfer.append(folder.path() + '/')
-    transfer.append(dst_conf['url'] + folder.uuid + '/')
+    transfer.append(dst_conf['url'] + '/' + folder.uuid + '/')
     proc = Popen(transfer, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
     LOG.debug("Initiated transfer {}:'{}'".format(id(proc), " ".join(transfer)))
     return proc

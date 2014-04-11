@@ -1,6 +1,5 @@
 import importlib
 import peewee
-import threading
 import activefolders.conf as conf
 import activefolders.db as db
 
@@ -15,11 +14,10 @@ def get_transport(name):
 
 def get_destinations(folder):
     """ Gets destination names from folder conf and returns full details """
-    folder_dsts = db.FolderDestination.select().where(db.FolderDestination.folder == folder)
+    folder_dsts = db.FolderDestination.select().where(db.FolderDestination.folder==folder)
     destinations = []
     for dst in folder_dsts:
-        dst = conf.destinations.get(dst.destination)
-        destinations.append(dst)
+        destinations.append(dst.destination)
     return destinations
 
 
@@ -29,7 +27,7 @@ def start(transfer):
     dst_conf = conf.destinations[transfer.destination]
     transport_name = dst_conf['transport']
     transport = get_transport(transport_name)
-    handle = transport.start_transfer(transfer.folder.path(), dst_conf)
+    handle = transport.start_transfer(transfer.folder, dst_conf)
     handles[transfer.id] = handle
     transfer.pending = False
     transfer.save()
@@ -54,7 +52,7 @@ def add_all(folder):
 def check():
     """ Check all current and pending transfers """
     for transfer_id, handle in handles:
-        transfer = db.Transfer.get(db.Transfer.id==transfer_id)
+        transfer = db.Transfer.get(db.Transfer.id==transfer_id, db.Transfer.pending==False)
         dst = conf.destinations[transfer.destination]
         transport = get_transport(dst['transport'])
         if transport.transfer_success(handle):
@@ -63,7 +61,6 @@ def check():
     pending_transfers = db.Transfer.select().where(db.Transfer.pending==True)
     for transfer in pending_transfers:
         try:
-            db.Transfer.get(db.Transfer.folder==transfer.folder, db.Transfer.destination==transfer.dst, db.Transfer.pending==False)
+            db.Transfer.get(db.Transfer.folder==transfer.folder, db.Transfer.destination==transfer.destination, db.Transfer.pending==False)
         except peewee.DoesNotExist:
             start(transfer)
-    threading.Timer(20, check).start()

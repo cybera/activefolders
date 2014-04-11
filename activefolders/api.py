@@ -3,6 +3,7 @@ import os
 import bottle
 import peewee
 import activefolders.controllers.folders as folders
+import activefolders.controllers.transfers as transfers
 import activefolders.conf as conf
 
 app = bottle.Bottle()
@@ -113,6 +114,7 @@ def get_destination(name):
         dst = dict(conf.destinations[name].items())
     return dst
 
+
 @app.get('/folders/<uuid>/destinations')
 def get_folder_destinations(uuid):
     with handle_errors():
@@ -135,6 +137,14 @@ def remove_folder_destination(uuid):
     with handle_errors():
         folders.remove_destination(uuid, dst_name)
     return "Destination removed"
+
+
+@app.post('/folders/<uuid>/start_transfers')
+def start_transfers(uuid):
+    with handle_errors():
+        folder = folders.get(uuid)
+    transfers.add_all(folder)
+    transfers.check()
 
 
 def start():
