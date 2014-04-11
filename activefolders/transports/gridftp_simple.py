@@ -11,8 +11,8 @@ default_behaviour = [BINARY,  # binary to run
                      "-fast",  # reuse data channels
                      "-g2",  # use v2 control protocol when possible
                      "-vb",  # display bytes and rate to stdout
-                     "-rst",  # restart on fail (5 retries by default)
-                     "-sync"]  # transfer only new or updated files
+                     "-rst"]  # restart on fail (5 retries by default)
+                     #"-sync"]  # transfer only new or updated files
 
 if not os.path.isfile(BINARY):
     LOG.critical("{} is not found".format(BINARY))
