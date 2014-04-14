@@ -51,8 +51,8 @@ def add(uuid=None):
 def remove(uuid):
     # TODO: Remove outstanding transfers
     folder = get(uuid)
+    storage.delete_folder(folder)
     folder.delete_instance()
-    storage.delete_folder(folder.path())
 
 
 def save_file(uuid, upload):
