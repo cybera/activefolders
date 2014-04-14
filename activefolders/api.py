@@ -74,6 +74,8 @@ def upload_file(uuid):
 def create_dir(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
+    if not path:
+        bottle.abort(400)
     folders.create_dir(uuid, path)
 
 
@@ -81,6 +83,8 @@ def create_dir(uuid):
 def delete(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
+    if not path:
+        bottle.abort(400)
     folders.delete(uuid, path)
     return "File/folder deleted"
 
@@ -90,6 +94,8 @@ def copy(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
     dst_path = bottle.request.query.dst_path
+    if not src_path or not dst_path:
+        bottle.abort(400)
     folders.copy(uuid, src_path, dst_path)
     return "File/folder copied"
 
@@ -99,6 +105,8 @@ def move(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
     dst_path = bottle.request.query.dst_path
+    if not src_path or not dst_path:
+        bottle.abort(400)
     folders.move(uuid, src_path, dst_path)
     return "File/folder moved"
 
