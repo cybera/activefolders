@@ -30,16 +30,26 @@ class Folder(BaseModel):
 
 
 class FolderDestination(BaseModel):
-    # TODO: Make unique key
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
+
+    class Meta:
+        # Each destination can only exist once per folder
+        indexes = (
+                (('folder', 'destination'), True),
+        )
 
 
 class Transfer(BaseModel):
-    # TODO: Make unique key
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
     pending = peewee.BooleanField(default=False)
+
+    class Meta:
+        # Only one pending and one active transfer per folder destination
+        indexes = (
+                (('folder', 'destination', 'pending'), True),
+        )
 
 
 def init():
