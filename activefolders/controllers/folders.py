@@ -4,7 +4,6 @@ import threading
 import importlib
 import activefolders.db as db
 import activefolders.conf as conf
-import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
 
 STORAGE_MODULE = "activefolders.storage.{}".format(conf.settings['dtnd']['storage'])
@@ -82,11 +81,12 @@ def move(uuid, src_path, dst_path):
 
 def get_destinations(uuid):
     folder = get(uuid)
-    dst_dict = { "destinations": [] }
-    destinations = db.FolderDestination.select().where(db.FolderDestination.folder == folder)
-    for dst in destinations:
-        dst_dict['destinations'].append(dst.destination)
-    return dst_dict
+    destinations = {}
+    destination_names = db.FolderDestination.select().where(db.FolderDestination.folder==folder)
+    for dst_name in destination_names:
+        dst_conf = conf.destinations[dst_name]
+        destinations[dst_name] = dst_conf
+    return destinations
 
 
 def add_destination(uuid, dst_name):
@@ -105,13 +105,13 @@ def remove_destination(uuid, dst_name):
         raise KeyError
 
 
-def check():
-    """ Initiate transfers on any dirty folders """
-    folders = db.Folder.select()
-    for folder in folders:
-        time_delta = datetime.datetime.now() - folder.last_changed
-        if folder.dirty and time_delta.total_seconds() > 60:
-            transfers.add_all(folder)
-            folder.dirty = False
-            folder.save()
-    threading.Timer(20, check).start()
+# def check():
+#     """ Initiate transfers on any dirty folders """
+#     folders = db.Folder.select()
+#     for folder in folders:
+#         time_delta = datetime.datetime.now() - folder.last_changed
+#         if folder.dirty and time_delta.total_seconds() > 60:
+#             transfers.add_all(folder)
+#             folder.dirty = False
+#             folder.save()
+#     threading.Timer(20, check).start()

@@ -10,6 +10,6 @@ LOG = logging.getLogger(__name__)
 def default_start():
     LOG.info("DTN daemon is starting")
     db.init()
-    folders.check()
+    #folders.check()
     transfers.check()
     api.start()

@@ -36,19 +36,34 @@ class FolderDestination(BaseModel):
     class Meta:
         # Each destination can only exist once per folder
         indexes = (
-                (('folder', 'destination'), True),
+            (('folder', 'destination'), True),
         )
 
 
 class Transfer(BaseModel):
+    PENDING = 'pending'
+    FOLDER_CREATED = 'folder_created'
+    IN_PROGRESS = 'in_progress'
+    COMPLETE = 'complete'
+    ACKNOWLEDGED = 'acknowledged'
+    STATUS_CHOICES = (
+        (PENDING, 'Pending'),
+        (FOLDER_CREATED, 'Folder created'),
+        (IN_PROGRESS, 'In progress'),
+        (COMPLETE, 'Complete'),
+        (ACKNOWLEDGED, 'Acknowledged'),
+    )
+
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
-    pending = peewee.BooleanField(default=False)
+    active = peewee.BooleanField(default=False)
+    status = peewee.TextField(default=PENDING, choices=STATUS_CHOICES)
+    is_dtn = peewee.BooleanField()
 
     class Meta:
         # Only one pending and one active transfer per folder destination
         indexes = (
-                (('folder', 'destination', 'pending'), True),
+            (('folder', 'destination', 'active'), True),
         )
 
 
