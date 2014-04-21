@@ -19,7 +19,20 @@ def delete_folder(folder):
 
 def create_dir(folder, path):
     path = join_and_verify(folder, path)
-    os.mkdir(path)
+    try:
+        os.makedirs(path)
+    except OSError:
+        if os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+def store(folder, path, filename, data, offset):
+    path = join_and_verify(folder, path, filename)
+    with open(path, 'ab') as f:
+        f.seek(offset)
+        f.write(data.read())
 
 
 def copy(folder, src_path, dst_path):

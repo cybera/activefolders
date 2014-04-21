@@ -59,7 +59,7 @@ def delta(uuid):
     pass
 
 
-@app.put('/folders/<uuid>/upload')
+@app.post('/folders/<uuid>/upload')
 def upload_file(uuid):
     upload = bottle.request.files.get('upload')
     name, ext = os.path.splitext(upload.filename)
@@ -68,6 +68,16 @@ def upload_file(uuid):
     except IOError:
         bottle.abort(403, "File already exists")
     return 'OK'
+
+
+@app.put('/folders/<uuid>/upload/<path:re:[a-zA-Z0-9/_.-]+>')
+def put_file(uuid, path):
+    if 'Content-Range' in bottle.request.headers:
+        range_str = bottle.request.headers['Content-Range']
+        offset = int(range_str.split(' ')[1].split('-')[0])
+    else:
+        offset = 0
+    folders.store(uuid, path=path, data=bottle.request.body, offset=offset)
 
 
 @app.post('/folders/<uuid>/fileops/create_dir')

@@ -60,6 +60,15 @@ def save_file(uuid, upload):
     storage.save_file(folder, upload)
 
 
+def store(uuid, path, data, offset):
+    folder = get(uuid)
+    path = path.split('/')
+    filename = path.pop()
+    path = '/'.join(path)
+    storage.create_dir(folder, path)
+    storage.store(folder, path, filename, data, offset)
+
+
 def create_dir(uuid, path):
     folder = get(uuid)
     storage.create_dir(folder, path)
