@@ -8,38 +8,41 @@ import activefolders.controllers.folders as folders
 handles = {}
 
 
-def get_transport(name):
-    transport_module = "activefolders.transports.{}".format(name)
+def get_transport(transfer):
+    if transfer.to_dtn:
+        transport_name = 'gridftp_simple'
+    else:
+        dst_conf = conf.destinations[transfer.destination]
+        transport_name = dst_conf['transport']
+    transport_module = "activefolders.transports.{}".format(transport_name)
     transport = importlib.import_module(transport_module)
     return transport
 
 
 def add_folder_to_dtn(folder, dtn_conf):
     url = dtn_conf['url'] + "/add_folder"
-    dsts = folders.get_destinations(folder.uuid)
+    destinations = folders.get_destinations(folder.uuid)
     folder_info = { 'folder': {} }
     folder_info['folder']['uuid'] = folder.uuid
     folder_info['folder']['home_dtn'] = conf.settings['dtnd']['name']
-    folder_info['folder']['destinations'] = list(dsts.keys())
+    folder_info['folder']['destinations'] = list(destinations.keys())
     resp = requests.post(url, data=folder_info)
 
 
 def start(transfer):
-    if transfer.is_dtn:
+    if transfer.to_dtn:
         dst_conf = conf.dtns[transfer.destination]
-        transport = get_transport('gridftp_simple')
     else:
         dst_conf = conf.destinations[transfer.destination]
-        transport_name = dst_conf['transport']
-        transport = get_transport(transport_name)
+    transport = get_transport(transfer)
     handle = transport.start_transfer(transfer.folder, dst_conf)
     handles[transfer.id] = handle
 
 
 def update(transfer):
     dst_conf = conf.destinations[transfer.id]
-    if transfer.is_dtn:
-        dtn_conf = conf.dtns[dst_conf['dtn']]
+    if transfer.to_dtn:
+        dst_conf = conf.dtns[dst_conf['dtn']]
 
     if not transfer.active:
         try:
@@ -49,8 +52,8 @@ def update(transfer):
             transfer.active = True
             transfer.save()
 
-    if transfer.status == db.Transfer.PENDING and transfer.is_dtn:
-        add_folder_to_dtn(transfer.folder, dtn_conf)
+    if transfer.status == db.Transfer.PENDING and transfer.to_dtn:
+        add_folder_to_dtn(transfer.folder, dst_conf)
         transfer.status = db.Transfer.FOLDER_CREATED
         transfer.save()
     if transfer.status == db.Transfer.PENDING or transfer.status == db.Transfer.FOLDER_CREATED:
@@ -59,16 +62,13 @@ def update(transfer):
         transfer.save()
     if transfer.status == db.Transfer.IN_PROGRESS:
         handle = handles.get(transfer.id)
-        transport = get_transport(dst_conf['transport'])
         if handle is None:
             start(transfer)
         else:
+            transport = get_transport(transfer)
             if transport.transfer_success(handle):
                 # TODO: Acknowledge transfer
-                if transfer.is_dtn:
-                    url = dtn_conf['url']
-                else:
-                    url = dst_conf['url']
+                url = dst_conf['url']
                 requests.get(url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
                 transfer.status = db.Transfer.ACKNOWLEDGED
                 transfer.save()
@@ -79,9 +79,9 @@ def update(transfer):
 def add(folder, destination):
     try:
         if destination['dtn'] == conf.settings['dtnd']['name']:
-            transfer = db.Transfer.create(folder=folder, destination=destination, active=False, is_dtn=False)
+            transfer = db.Transfer.create(folder=folder, destination=destination, active=False, to_dtn=False)
         else:
-            transfer = db.Transfer.create(folder=folder, destination=destination['dtn'], active=False, is_dtn=True)
+            transfer = db.Transfer.create(folder=folder, destination=destination['dtn'], active=False, to_dtn=True)
     except peewee.IntegrityError:
         # Transfer already pending
         return None

@@ -138,8 +138,8 @@ def get_destination(name):
 @app.get('/folders/<uuid>/destinations')
 def get_folder_destinations(uuid):
     with handle_errors():
-        dsts = folders.get_destinations(uuid)
-    return dsts
+        destinations = folders.get_destinations(uuid)
+    return destinations
 
 
 @app.post('/folders/<uuid>/destinations')

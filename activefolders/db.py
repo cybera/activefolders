@@ -58,7 +58,7 @@ class Transfer(BaseModel):
     destination = peewee.TextField()
     active = peewee.BooleanField(default=False)
     status = peewee.TextField(default=PENDING, choices=STATUS_CHOICES)
-    is_dtn = peewee.BooleanField()
+    to_dtn = peewee.BooleanField()
 
     class Meta:
         # Only one pending and one active transfer per folder destination
