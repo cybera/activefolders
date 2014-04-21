@@ -82,10 +82,9 @@ def move(uuid, src_path, dst_path):
 def get_destinations(uuid):
     folder = get(uuid)
     destinations = {}
-    destination_names = db.FolderDestination.select().where(db.FolderDestination.folder==folder)
-    for dst_name in destination_names:
-        dst_conf = conf.destinations[dst_name]
-        destinations[dst_name] = dst_conf
+    folder_destinations = db.FolderDestination.select().where(db.FolderDestination.folder==folder)
+    for folder_dst in folder_destinations:
+        destinations[folder_dst.destination] = conf.destinations[folder_dst.destination]
     return destinations
 
 

@@ -40,7 +40,7 @@ def start(transfer):
 
 
 def update(transfer):
-    dst_conf = conf.destinations[transfer.id]
+    dst_conf = conf.destinations[transfer.destination]
     if transfer.to_dtn:
         dst_conf = conf.dtns[dst_conf['dtn']]
 
@@ -77,11 +77,12 @@ def update(transfer):
 
 
 def add(folder, destination):
+    dst_conf = conf.destinations[destination]
     try:
-        if destination['dtn'] == conf.settings['dtnd']['name']:
+        if dst_conf['dtn'] == conf.settings['dtnd']['name']:
             transfer = db.Transfer.create(folder=folder, destination=destination, active=False, to_dtn=False)
         else:
-            transfer = db.Transfer.create(folder=folder, destination=destination['dtn'], active=False, to_dtn=True)
+            transfer = db.Transfer.create(folder=folder, destination=dst_conf['dtn'], active=False, to_dtn=True)
     except peewee.IntegrityError:
         # Transfer already pending
         return None
@@ -89,14 +90,14 @@ def add(folder, destination):
 
 
 def add_all(folder):
-    destinations = folders.get_destinations(folder)
+    destinations = folders.get_destinations(folder.uuid)
     dtns = []
-    for dst in destinations:
+    for dst, dst_conf in destinations.items():
         # If sending to multiple destinations that belong to one DTN only add one transfer to that DTN
-        if dst['dtn'] in dtns:
+        if dst_conf['dtn'] in dtns:
             continue
-        if dst['dtn'] != conf.settings['dtnd']['name']:
-            dtns.append(dst['dtn'])
+        if dst_conf['dtn'] != conf.settings['dtnd']['name']:
+            dtns.append(dst_conf['dtn'])
         add(folder, dst)
 
 
