@@ -7,7 +7,8 @@ import activefolders.conf as conf
 import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
 
-STORAGE_MODULE = "activefolders.storage.{}".format(conf.settings['dtnd']['storage'])
+STORAGE_MODULE = "activefolders.storage.{}".\
+    format(conf.settings['dtnd']['storage'])
 storage = importlib.import_module(STORAGE_MODULE)
 
 
@@ -17,7 +18,7 @@ def get_all():
 
 
 def get_all_dicts():
-    folders = { "folders": [] }
+    folders = {"folders": []}
     for folder in db.Folder.select().dicts():
         folder['last_changed'] = str(folder['last_changed'])
         folders['folders'].append(folder)
@@ -96,8 +97,9 @@ def move(uuid, src_path, dst_path):
 
 def get_destinations(uuid):
     folder = get(uuid)
-    dst_dict = { "destinations": [] }
-    destinations = db.FolderDestination.select().where(db.FolderDestination.folder == folder)
+    dst_dict = {"destinations": []}
+    destinations = db.FolderDestination.select().\
+        where(db.FolderDestination.folder == folder)
     for dst in destinations:
         dst_dict['destinations'].append(dst.destination)
     return dst_dict
@@ -114,7 +116,9 @@ def add_destination(uuid, dst_name):
 def remove_destination(uuid, dst_name):
     folder = get(uuid)
     if dst_name in conf.destinations:
-        db.FolderDestination.delete().where(db.FolderDestination.folder == folder, db.FolderDestination.destination == dst_name)
+        db.FolderDestination.delete().\
+            where(db.FolderDestination.folder == folder,
+                  db.FolderDestination.destination == dst_name)
     else:
         raise KeyError
 

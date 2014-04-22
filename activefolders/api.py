@@ -77,7 +77,8 @@ def put_file(uuid, filepath):
         offset = int(range_str.split(' ')[1].split('-')[0])
     else:
         offset = 0
-    folders.put_file(uuid, path=filepath, data=bottle.request.body, offset=offset)
+    folders.put_file(uuid, path=filepath,
+                     data=bottle.request.body, offset=offset)
 
 
 @app.get('/folders/<uuid>/files/<filepath:path>')
@@ -163,4 +164,6 @@ def start_transfers(uuid):
 
 
 def start():
-    app.run(host=conf.settings['dtnd']['host'], port=conf.settings['dtnd']['listen_port'], debug=True)
+    app.run(host=conf.settings['dtnd']['host'],
+            port=conf.settings['dtnd']['listen_port'],
+            debug=True)
