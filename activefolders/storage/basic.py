@@ -19,7 +19,24 @@ def delete_folder(folder):
 
 def create_dir(folder, path):
     path = join_and_verify(folder, path)
-    os.mkdir(path)
+    try:
+        os.makedirs(path)
+    except OSError:
+        if os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+def put_file(folder, path, filename, data, offset):
+    path = join_and_verify(folder, path, filename)
+    with open(path, 'ab') as f:
+        f.seek(offset)
+        f.write(data.read())
+
+
+def get_file(folder, path, callback):
+    return callback(path, root=folder.path())
 
 
 def copy(folder, src_path, dst_path):
