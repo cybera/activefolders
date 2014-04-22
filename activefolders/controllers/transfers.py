@@ -84,15 +84,18 @@ def update(transfer):
             start(transfer)
         else:
             transport = get_transport(transfer)
-            if transport.transfer_success(handle):
-                # TODO: Acknowledge transfer
-                LOG.debug("Transfer {} complete, getting acknowledgement".format(transfer.id))
+            if transport.transfer_success(handle) and transfer.to_dtn:
+                # TODO: Acknowledge transfer instead of using start_transfers
+                LOG.debug("Transfer {} to DTN complete, getting acknowledgement".format(transfer.id))
                 api_url = dst_conf['api']
                 requests.get(api_url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
                 transfer.status = db.Transfer.ACKNOWLEDGED
                 transfer.save()
+            elif transport.transfer_success(handle):
+                LOG.debug("Transfer {} to destination complete, deleting".format(transfer.id))
+                transfer.delete_instance()
     if transfer.status == db.Transfer.ACKNOWLEDGED:
-        LOG.info("Transfer {} acknowledged, deleting".format(transfer.id))
+        LOG.info("Transfer {} to DTN acknowledged, deleting".format(transfer.id))
         transfer.delete_instance()
 
 
