@@ -28,11 +28,15 @@ def create_dir(folder, path):
             raise
 
 
-def store(folder, path, filename, data, offset):
+def put_file(folder, path, filename, data, offset):
     path = join_and_verify(folder, path, filename)
     with open(path, 'ab') as f:
         f.seek(offset)
         f.write(data.read())
+
+
+def get_file(folder, path, callback):
+    return callback(path, root=folder.path())
 
 
 def copy(folder, src_path, dst_path):
