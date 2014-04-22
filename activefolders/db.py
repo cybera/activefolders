@@ -1,7 +1,7 @@
 import peewee
 import datetime
 import activefolders.conf as conf
-import activefolders.utils as utils
+from uuid import UUID
 
 database = peewee.SqliteDatabase(None, fields={'text': 'text'})
 
@@ -15,7 +15,7 @@ class UUIDField(peewee.Field):
     db_field = 'text'
 
     def coerce(self, value):
-        return utils.coerce_uuid(value)
+        return str(UUID(value))
 
 
 class Folder(BaseModel):

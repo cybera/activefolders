@@ -1,10 +1,7 @@
 from uuid import uuid4
-import datetime
-import threading
 import importlib
 import activefolders.db as db
 import activefolders.conf as conf
-import activefolders.utils as utils
 
 STORAGE_MODULE = "activefolders.storage.{}".\
     format(conf.settings['dtnd']['storage'])
@@ -25,13 +22,11 @@ def get_all_dicts():
 
 
 def get(uuid):
-    uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.get(db.Folder.uuid == uuid)
     return folder
 
 
 def get_dict(uuid):
-    uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
     folder['last_changed'] = str(folder['last_changed'])
     return folder
@@ -41,7 +36,6 @@ def get_dict(uuid):
 def add(uuid=None):
     if uuid is None:
         uuid = str(uuid4())
-    uuid = utils.coerce_uuid(uuid)
     folder = db.Folder.create(uuid=uuid)
     storage.create_folder(folder)
     return folder
@@ -97,7 +91,8 @@ def move(uuid, src_path, dst_path):
 def get_destinations(uuid):
     folder = get(uuid)
     destinations = {}
-    folder_destinations = db.FolderDestination.select().where(db.FolderDestination.folder==folder)
+    folder_destinations = db.FolderDestination.select().\
+        where(db.FolderDestination.folder == folder)
     for folder_dst in folder_destinations:
         destinations[folder_dst.destination] = conf.destinations[folder_dst.destination]
     return destinations
