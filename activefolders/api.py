@@ -34,12 +34,13 @@ def create_folder():
 @app.post('/add_folder')
 def add_folder():
     """ Adds existing folder from another DTN """
-    folder_data = bottle.request.json()
+    folder_data = bottle.request.json
     folder = folders.add(folder_data['uuid'])
     folder.home_dtn = folder_data['home_dtn']
     folder.save()
-    for dst in folder_data['destinations']:
-        folders.add_destination(folder_data['uuid'], dst)
+    if 'destinations' in folder_data:
+        for dst in folder_data['destinations']:
+            folders.add_destination(folder_data['uuid'], dst)
     bottle.response.status = 201
     return "Folder added"
 
