@@ -31,6 +31,20 @@ def create_folder():
     return folder.uuid
 
 
+@app.post('/add_folder')
+def add_folder():
+    """ Adds existing folder from another DTN """
+    folder_data = bottle.request.json
+    folder = folders.add(folder_data['uuid'])
+    folder.home_dtn = folder_data['home_dtn']
+    folder.save()
+    if 'destinations' in folder_data:
+        for dst in folder_data['destinations']:
+            folders.add_destination(folder_data['uuid'], dst)
+    bottle.response.status = 201
+    return "Folder added"
+
+
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
@@ -141,16 +155,15 @@ def get_destination(name):
 @app.get('/folders/<uuid>/destinations')
 def get_folder_destinations(uuid):
     with handle_errors():
-        dsts = folders.get_destinations(uuid)
-    return dsts
+        destinations = folders.get_destinations(uuid)
+    return destinations
 
 
 @app.post('/folders/<uuid>/destinations')
 def add_folder_destination(uuid):
     dst_name = bottle.request.query.dst
     with handle_errors():
-        pass
-    folders.add_destination(uuid, dst_name)
+        folders.add_destination(uuid, dst_name)
     return "Destination added"
 
 
