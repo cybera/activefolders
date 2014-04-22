@@ -2,11 +2,28 @@ from contextlib import contextmanager
 import os
 import bottle
 import peewee
+from uuid import UUID
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.conf as conf
 
 app = bottle.Bottle()
+
+
+def uuid_filter(_):
+    # TODO: Decide if we really need it in str
+    regexp = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+
+    def to_python(match):
+        return str(UUID(match))
+
+    def to_url(string):
+        return str(UUID(string))
+
+    return regexp, to_python, to_url
+
+
+app.router.add_filter('uuid', uuid_filter)
 
 
 @contextmanager
@@ -38,7 +55,7 @@ def get_folders():
     return all_folders
 
 
-@app.get('/folders/<uuid>')
+@app.get('/folders/<uuid:uuid>')
 def get_folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
@@ -46,7 +63,7 @@ def get_folder(uuid):
     return folder
 
 
-@app.delete('/folders/<uuid>')
+@app.delete('/folders/<uuid:uuid>')
 def delete_folder(uuid):
     """ Deletes a folder from the DTN """
     with handle_errors():
@@ -54,12 +71,12 @@ def delete_folder(uuid):
     return "Folder deleted"
 
 
-@app.get('/folders/<uuid>/delta')
+@app.get('/folders/<uuid:uuid>/delta')
 def delta(uuid):
     pass
 
 
-@app.post('/folders/<uuid>/files')
+@app.post('/folders/<uuid:uuid>/files')
 def upload_file(uuid):
     upload = bottle.request.files.get('upload')
     name, ext = os.path.splitext(upload.filename)
@@ -70,7 +87,7 @@ def upload_file(uuid):
     return 'OK'
 
 
-@app.put('/folders/<uuid>/files/<filepath:path>')
+@app.put('/folders/<uuid:uuid>/files/<filepath:path>')
 def put_file(uuid, filepath):
     if 'Content-Range' in bottle.request.headers:
         range_str = bottle.request.headers['Content-Range']
@@ -81,19 +98,19 @@ def put_file(uuid, filepath):
                      data=bottle.request.body, offset=offset)
 
 
-@app.get('/folders/<uuid>/files/<filepath:path>')
+@app.get('/folders/<uuid:uuid>/files/<filepath:path>')
 def get_file(uuid, filepath):
     return folders.get_file(uuid, filepath, bottle.static_file)
 
 
-@app.post('/folders/<uuid>/fileops/create_dir')
+@app.post('/folders/<uuid:uuid>/fileops/create_dir')
 def create_dir(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
     folders.create_dir(uuid, path)
 
 
-@app.post('/folders/<uuid>/fileops/delete')
+@app.post('/folders/<uuid:uuid>/fileops/delete')
 def delete(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
@@ -101,7 +118,7 @@ def delete(uuid):
     return "File/folder deleted"
 
 
-@app.post('/folders/<uuid>/fileops/copy')
+@app.post('/folders/<uuid:uuid>/fileops/copy')
 def copy(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
@@ -110,7 +127,7 @@ def copy(uuid):
     return "File/folder copied"
 
 
-@app.post('/folders/<uuid>/fileops/move')
+@app.post('/folders/<uuid:uuid>/fileops/move')
 def move(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
@@ -131,14 +148,14 @@ def get_destination(name):
     return dst
 
 
-@app.get('/folders/<uuid>/destinations')
+@app.get('/folders/<uuid:uuid>/destinations')
 def get_folder_destinations(uuid):
     with handle_errors():
         dsts = folders.get_destinations(uuid)
     return dsts
 
 
-@app.post('/folders/<uuid>/destinations')
+@app.post('/folders/<uuid:uuid>/destinations')
 def add_folder_destination(uuid):
     dst_name = bottle.request.query.dst
     with handle_errors():
@@ -147,7 +164,7 @@ def add_folder_destination(uuid):
     return "Destination added"
 
 
-@app.delete('/folders/<uuid>/destinations')
+@app.delete('/folders/<uuid:uuid>/destinations')
 def remove_folder_destination(uuid):
     dst_name = bottle.request.query.dst
     with handle_errors():
@@ -155,7 +172,7 @@ def remove_folder_destination(uuid):
     return "Destination removed"
 
 
-@app.post('/folders/<uuid>/start_transfers')
+@app.post('/folders/<uuid:uuid>/start_transfers')
 def start_transfers(uuid):
     with handle_errors():
         folder = folders.get(uuid)
