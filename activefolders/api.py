@@ -48,6 +48,20 @@ def create_folder():
     return folder.uuid
 
 
+@app.post('/add_folder')
+def add_folder():
+    """ Adds existing folder from another DTN """
+    folder_data = bottle.request.json
+    folder = folders.add(folder_data['uuid'])
+    folder.home_dtn = folder_data['home_dtn']
+    folder.save()
+    if 'destinations' in folder_data:
+        for dst in folder_data['destinations']:
+            folders.add_destination(folder_data['uuid'], dst)
+    bottle.response.status = 201
+    return "Folder added"
+
+
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
@@ -107,6 +121,8 @@ def get_file(uuid, filepath):
 def create_dir(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
+    if not path:
+        bottle.abort(400)
     folders.create_dir(uuid, path)
 
 
@@ -114,6 +130,8 @@ def create_dir(uuid):
 def delete(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
+    if not path:
+        bottle.abort(400)
     folders.delete(uuid, path)
     return "File/folder deleted"
 
@@ -123,6 +141,8 @@ def copy(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
     dst_path = bottle.request.query.dst_path
+    if not src_path or not dst_path:
+        bottle.abort(400)
     folders.copy(uuid, src_path, dst_path)
     return "File/folder copied"
 
@@ -132,6 +152,8 @@ def move(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
     dst_path = bottle.request.query.dst_path
+    if not src_path or not dst_path:
+        bottle.abort(400)
     folders.move(uuid, src_path, dst_path)
     return "File/folder moved"
 
@@ -151,16 +173,15 @@ def get_destination(name):
 @app.get('/folders/<uuid:uuid>/destinations')
 def get_folder_destinations(uuid):
     with handle_errors():
-        dsts = folders.get_destinations(uuid)
-    return dsts
+        destinations = folders.get_destinations(uuid)
+    return destinations
 
 
 @app.post('/folders/<uuid:uuid>/destinations')
 def add_folder_destination(uuid):
     dst_name = bottle.request.query.dst
     with handle_errors():
-        pass
-    folders.add_destination(uuid, dst_name)
+        folders.add_destination(uuid, dst_name)
     return "Destination added"
 
 

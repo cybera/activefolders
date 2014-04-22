@@ -59,18 +59,13 @@ directory "/etc/activefolders" do
     mode "0755"
 end
 
-template "/etc/activefolders/activefolders.conf" do
-    source "activefolders.conf.erb"
-    owner "root"
-    group "root"
-    mode "0644"
-end
-
-template "/etc/activefolders/destinations.conf" do
-    source "destinations.conf.erb"
-    owner "root"
-    group "root"
-    mode "0644"
+["activefolders", "dtns", "destinations"].each do |conf_file|
+    template "/etc/activefolders/#{conf_file}.conf" do
+        source "#{conf_file}.conf.erb"
+        owner "root"
+        group "root"
+        mode "0644"
+    end
 end
 
 if node[:dtnd][:bottle_dev]
