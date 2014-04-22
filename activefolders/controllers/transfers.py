@@ -1,9 +1,13 @@
 import importlib
 import peewee
 import requests
+import logging
+import json
 import activefolders.conf as conf
 import activefolders.db as db
 import activefolders.controllers.folders as folders
+
+LOG = logging.getLogger(__name__)
 
 handles = {}
 
@@ -20,13 +24,22 @@ def get_transport(transfer):
 
 
 def add_folder_to_dtn(folder, dtn_conf):
-    url = dtn_conf['url'] + "/add_folder"
+    url = dtn_conf['api'] + "/add_folder"
+    headers = { 'Content-type': 'application/json' }
     destinations = folders.get_destinations(folder.uuid)
-    folder_info = { 'folder': {} }
-    folder_info['folder']['uuid'] = folder.uuid
-    folder_info['folder']['home_dtn'] = conf.settings['dtnd']['name']
-    folder_info['folder']['destinations'] = list(destinations.keys())
-    resp = requests.post(url, data=folder_info)
+    destinations = list(destinations.keys())
+    folder_data = {
+        'uuid': folder.uuid,
+        'home_dtn': conf.settings['dtnd']['name'],
+        'destinations': destinations
+    }
+    LOG.info("Adding folder {} to {}".format(folder.uuid, url))
+    resp = requests.post(url, data=json.dumps(folder_data), headers=headers)
+    if resp.status_code == 201:
+        return 0
+    else:
+        LOG.error("Adding folder {} to {} failed with error: {}".format(folder.uuid, url, resp.text))
+        return 1
 
 
 def start(transfer):
@@ -35,6 +48,7 @@ def start(transfer):
     else:
         dst_conf = conf.destinations[transfer.destination]
     transport = get_transport(transfer)
+    LOG.info("Transferring folder {} to {}".format(transfer.folder.uuid, dst_conf['url']))
     handle = transport.start_transfer(transfer.folder, dst_conf)
     handles[transfer.id] = handle
 
@@ -44,18 +58,22 @@ def update(transfer):
     if transfer.to_dtn:
         dst_conf = conf.dtns[dst_conf['dtn']]
 
+    LOG.debug("Checking transfer {} for folder {} to {}, current status {}".format(transfer.id, transfer.folder.uuid, dst_conf['url'], transfer.status))
+
     if not transfer.active:
         try:
             db.Transfer.get(db.Transfer.folder==transfer.folder, db.Transfer.destination==transfer.destination, db.Transfer.active==True)
+            LOG.debug("Transfer {} is still pending".format(transfer.id))
             return
         except peewee.DoesNotExist:
             transfer.active = True
             transfer.save()
+            LOG.debug("Transfer {} is now active".format(transfer.id))
 
     if transfer.status == db.Transfer.PENDING and transfer.to_dtn:
-        add_folder_to_dtn(transfer.folder, dst_conf)
-        transfer.status = db.Transfer.FOLDER_CREATED
-        transfer.save()
+        if add_folder_to_dtn(transfer.folder, dst_conf) == 0:
+            transfer.status = db.Transfer.FOLDER_CREATED
+            transfer.save()
     if transfer.status == db.Transfer.PENDING or transfer.status == db.Transfer.FOLDER_CREATED:
         start(transfer)
         transfer.status = db.Transfer.IN_PROGRESS
@@ -68,11 +86,13 @@ def update(transfer):
             transport = get_transport(transfer)
             if transport.transfer_success(handle):
                 # TODO: Acknowledge transfer
-                url = dst_conf['url']
-                requests.get(url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
+                LOG.debug("Transfer {} complete, getting acknowledgement".format(transfer.id))
+                api_url = dst_conf['api']
+                requests.get(api_url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
                 transfer.status = db.Transfer.ACKNOWLEDGED
                 transfer.save()
     if transfer.status == db.Transfer.ACKNOWLEDGED:
+        LOG.info("Transfer {} acknowledged, deleting".format(transfer.id))
         transfer.delete_instance()
 
 
