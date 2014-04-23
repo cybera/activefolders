@@ -22,8 +22,7 @@ Vagrant.configure("2") do |config|
         chef.json = {
           "dtnd" => {
             "repository" => "/vagrant",
-            "user" => "vagrant",
-            "group" => "vagrant"
+            "user" => "vagrant"
           }
         }
       end
