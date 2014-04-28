@@ -10,5 +10,5 @@ end
 
 file "/etc/chef/ohai/hints/openstack.json" do
   action :create
-  notifies :reload, "ohai[reload openstack]", :imediately
+  notifies :reload, "ohai[reload openstack]", :immediately
 end
