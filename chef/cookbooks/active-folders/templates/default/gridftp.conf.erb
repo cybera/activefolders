@@ -23,7 +23,6 @@ dc_whitelist udt,gsi,tcp
 
 allow_anonymous 1
 anonymous_user <%= node['dtnd']['user'] %>
-anonymous_group <%= node['dtnd']['group'] %>
 
 log_module syslog
 log_single /var/log/gridftp.log
