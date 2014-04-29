@@ -35,7 +35,7 @@ def add_folder_to_dtn(folder, dtn_conf):
     }
     LOG.info("Adding folder {} to {}".format(folder.uuid, url))
     resp = requests.post(url, data=json.dumps(folder_data), headers=headers)
-    if resp.status_code == 201:
+    if resp.status_code == 200 or resp.status_code == 201:
         return 0
     else:
         LOG.error("Adding folder {} to {} failed with error: {}".format(folder.uuid, url, resp.text))

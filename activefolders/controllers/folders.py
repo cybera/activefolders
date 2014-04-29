@@ -32,6 +32,10 @@ def get_dict(uuid):
     return folder
 
 
+def exists(uuid):
+    return db.Folder.select().where(db.Folder.uuid==uuid).count() == 1
+
+
 @db.database.commit_on_success
 def add(uuid=None):
     if uuid is None:
@@ -94,7 +98,8 @@ def get_destinations(uuid):
     folder_destinations = db.FolderDestination.select().\
         where(db.FolderDestination.folder == folder)
     for folder_dst in folder_destinations:
-        destinations[folder_dst.destination] = conf.destinations[folder_dst.destination]
+        dst_conf = dict(conf.destinations[folder_dst.destination])
+        destinations[folder_dst.destination] = dst_conf
     return destinations
 
 

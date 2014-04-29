@@ -52,14 +52,25 @@ def create_folder():
 def add_folder():
     """ Adds existing folder from another DTN """
     folder_data = bottle.request.json
-    folder = folders.add(folder_data['uuid'])
+    uuid = folder_data['uuid']
+    if folders.exists(uuid):
+        bottle.response.status = 200
+        folder = folders.get(uuid)
+    else:
+        bottle.response.status = 201
+        folder = folders.add(uuid)
     folder.home_dtn = folder_data['home_dtn']
-    folder.save()
     if 'destinations' in folder_data:
-        for dst in folder_data['destinations']:
-            folders.add_destination(folder_data['uuid'], dst)
-    bottle.response.status = 201
-    return "Folder added"
+        # TODO: Figure out why destinations doesn't exist if it's empty
+        old_destinations = folders.get_destinations(uuid)
+        new_destinations = folder_data['destinations']
+        for dst in new_destinations:
+            if dst not in old_destinations:
+                folders.add_destination(uuid, dst)
+        for dst in old_destinations:
+            if dst not in new_destinations:
+                folders.remove_destination(uuid, dst)
+    return "Folder added/updated"
 
 
 @app.get('/folders')
