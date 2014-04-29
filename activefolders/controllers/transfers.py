@@ -51,7 +51,7 @@ def start(transfer):
     transport = get_transport(transfer)
     LOG.info("Transferring folder {} to {}".format(transfer.folder.uuid, dst_conf['url']))
     handle = transport.start_transfer(transfer.folder, dst_conf)
-    handles[transfer.id] = handle
+    return handle
 
 
 def update(transfer):
@@ -82,21 +82,32 @@ def update(transfer):
     if transfer.status == db.Transfer.IN_PROGRESS:
         handle = handles.get(transfer.id)
         if handle is None:
-            start(transfer)
+            handle = start(transfer)
+            handles[transfer.id] = handle
         else:
             transport = get_transport(transfer)
-            if transport.transfer_success(handle) and transfer.to_dtn:
-                # TODO: Acknowledge transfer instead of using start_transfers
-                LOG.debug("Transfer {} to DTN complete, getting acknowledgement".format(transfer.id))
-                api_url = dst_conf['api']
-                requests.get(api_url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
-                transfer.status = db.Transfer.ACKNOWLEDGED
+            transfer_success = transport.transfer_success(handle)
+            if transfer_success:
+                LOG.debug("Transfer {} complete".format(transfer.id))
+                transfer.status = db.Transfer.COMPLETE
                 transfer.save()
-            elif transport.transfer_success(handle):
-                LOG.debug("Transfer {} to destination complete, deleting".format(transfer.id))
-                transfer.delete_instance()
+                del handles[transfer.id]
+            elif transfer_success == False:
+                LOG.error("Transfer {} failed".format(transfer.id))
+                del handles[transfer.id]
+    if transfer.status == db.Transfer.COMPLETE:
+        if transfer.to_dtn:
+            # TODO: Acknowledge transfer instead of using start_transfers
+            LOG.debug("Transfer {} was to DTN, getting acknowledgement".format(transfer.id))
+            api_url = dst_conf['api']
+            requests.get(api_url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
+            transfer.status = db.Transfer.ACKNOWLEDGED
+            transfer.save()
+        else:
+            LOG.debug("Transfer {} was to destination, deleting".format(transfer.id))
+            transfer.delete_instance()
     if transfer.status == db.Transfer.ACKNOWLEDGED:
-        LOG.info("Transfer {} to DTN acknowledged, deleting".format(transfer.id))
+        LOG.info("Transfer {} acknowledged, deleting".format(transfer.id))
         transfer.delete_instance()
 
 
