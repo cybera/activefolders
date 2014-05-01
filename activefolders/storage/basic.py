@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 
 
@@ -36,6 +37,9 @@ def put_file(folder, path, filename, data, offset):
 
 
 def get_file(folder, path, callback):
+    fullpath = join_and_verify(folder, path)
+    if os.path.isdir(fullpath):
+        return json.dumps([f for f in os.listdir(fullpath)])
     return callback(path, root=folder.path())
 
 
