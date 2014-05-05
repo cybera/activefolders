@@ -90,6 +90,10 @@ template "/etc/init.d/dtnd" do
     mode 0755
 end
 
+service "rsyslog" do
+    supports :restart => true
+end
+
 file "/etc/rsyslog.d/10-dtnd.conf" do
     content "local6.*        /var/log/dtnd.log"
     notifies :restart, "service[rsyslog]"
