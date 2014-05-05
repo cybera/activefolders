@@ -100,7 +100,7 @@ def update(transfer):
             # TODO: Acknowledge transfer instead of using start_transfers
             LOG.debug("Transfer {} was to DTN, getting acknowledgement".format(transfer.id))
             api_url = dst_conf['api']
-            requests.get(api_url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
+            requests.post(api_url + '/folders/{}/start_transfers'.format(transfer.folder.uuid))
             transfer.status = db.Transfer.ACKNOWLEDGED
             transfer.save()
         else:
