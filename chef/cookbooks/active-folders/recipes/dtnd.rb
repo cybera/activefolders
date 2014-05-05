@@ -92,17 +92,13 @@ end
 
 file "/etc/rsyslog.d/10-dtnd.conf" do
     content "local6.*        /var/log/dtnd.log"
-end
-
-service "rsyslog" do
-    action :restart
+    notifies :restart, "service[rsyslog]"
 end
 
 service "dtnd" do
     supports :restart => true
     action [ :enable, :start ]
 end
-
 
 service "globus-gridftp-server" do
     supports :status => true, :restart => true, :reload => true
