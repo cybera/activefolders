@@ -1,10 +1,11 @@
 from contextlib import contextmanager
+from uuid import UUID
 import os
 import bottle
 import peewee
-from uuid import UUID
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
+import activefolders.controllers.exports as exports
 import activefolders.conf as conf
 
 app = bottle.Bottle()
@@ -55,11 +56,9 @@ def add_folder():
     uuid = folder_data['uuid']
     if folders.exists(uuid):
         bottle.response.status = 200
-        folder = folders.get(uuid)
     else:
         bottle.response.status = 201
-        folder = folders.add(uuid)
-    folder.home_dtn = folder_data['home_dtn']
+        folders.add(uuid, folder_data['home_dtn'])
     if 'destinations' in folder_data:
         # TODO: Figure out why destinations doesn't exist if it's empty
         old_destinations = folders.get_destinations(uuid)
@@ -190,26 +189,26 @@ def get_folder_destinations(uuid):
 
 @app.post('/folders/<uuid:uuid>/destinations')
 def add_folder_destination(uuid):
-    dst_name = bottle.request.query.dst
+    destination = bottle.request.query.dst
     with handle_errors():
-        folders.add_destination(uuid, dst_name)
+        folders.add_destination(uuid, destination)
     return "Destination added"
 
 
 @app.delete('/folders/<uuid:uuid>/destinations')
 def remove_folder_destination(uuid):
-    dst_name = bottle.request.query.dst
+    destination = bottle.request.query.dst
     with handle_errors():
-        folders.remove_destination(uuid, dst_name)
+        folders.remove_destination(uuid, destination)
     return "Destination removed"
 
 
 @app.post('/folders/<uuid:uuid>/start_transfers')
 def start_transfers(uuid):
-    with handle_errors():
-        folder = folders.get(uuid)
-    transfers.add_all(folder)
+    transfers.add_all(uuid)
+    exports.add_all(uuid)
     transfers.check()
+    exports.check()
 
 
 def start():

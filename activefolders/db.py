@@ -22,7 +22,7 @@ class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
     dirty = peewee.BooleanField(default=False)
     last_changed = peewee.DateTimeField(default=datetime.datetime.now)
-    home_dtn = peewee.TextField(null=True)
+    home_dtn = peewee.TextField()
 
     def path(self):
         path = conf.settings['dtnd']['storage_path'] + '/' + self.uuid
@@ -32,6 +32,7 @@ class Folder(BaseModel):
 class FolderDestination(BaseModel):
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
+    credentials = peewee.TextField(null=True)
 
     class Meta:
         # Each destination can only exist once per folder
@@ -40,35 +41,41 @@ class FolderDestination(BaseModel):
         )
 
 
+class Export(BaseModel):
+    folder_destination = peewee.ForeignKeyField(FolderDestination)
+    active = peewee.BooleanField(default=False)
+
+    class Meta:
+        indexes = (
+            (('folder_destination', 'active'), True),
+        )
+
+
 class Transfer(BaseModel):
-    PENDING = 'pending'
-    FOLDER_CREATED = 'folder_created'
+    CREATE_FOLDER = 'create_folder'
     IN_PROGRESS = 'in_progress'
-    COMPLETE = 'complete'
-    ACKNOWLEDGED = 'acknowledged'
+    GET_ACKNOWLEDGMENT = 'get_acknowledgement'
     STATUS_CHOICES = (
-        (PENDING, 'Pending'),
-        (FOLDER_CREATED, 'Folder created'),
+        (CREATE_FOLDER, 'Creating folder'),
         (IN_PROGRESS, 'In progress'),
-        (COMPLETE, 'Complete'),
-        (ACKNOWLEDGED, 'Acknowledged'),
+        (GET_ACKNOWLEDGMENT, 'Getting acknowledgement'),
     )
 
     folder = peewee.ForeignKeyField(Folder)
-    destination = peewee.TextField()
+    dtn = peewee.TextField()
     active = peewee.BooleanField(default=False)
-    status = peewee.TextField(default=PENDING, choices=STATUS_CHOICES)
-    to_dtn = peewee.BooleanField()
+    status = peewee.TextField(default=CREATE_FOLDER, choices=STATUS_CHOICES)
 
     class Meta:
         # Only one pending and one active transfer per folder destination
         indexes = (
-            (('folder', 'destination', 'active'), True),
+            (('folder', 'dtn', 'active'), True),
         )
 
 
 def init():
     database.init(conf.settings['dtnd']['db_path'])
     Transfer.create_table(fail_silently=True)
+    Export.create_table(fail_silently=True)
     FolderDestination.create_table(fail_silently=True)
     Folder.create_table(fail_silently=True)

@@ -3,8 +3,8 @@ import importlib
 import activefolders.db as db
 import activefolders.conf as conf
 
-STORAGE_MODULE = "activefolders.storage.{}".\
-    format(conf.settings['dtnd']['storage'])
+STORAGE_MODULE = "activefolders.storage.{}".format(
+        conf.settings['dtnd']['storage'])
 storage = importlib.import_module(STORAGE_MODULE)
 
 
@@ -33,14 +33,14 @@ def get_dict(uuid):
 
 
 def exists(uuid):
-    return db.Folder.select().where(db.Folder.uuid==uuid).count() == 1
+    return db.Folder.select().where(db.Folder.uuid == uuid).count() == 1
 
 
 @db.database.commit_on_success
-def add(uuid=None):
+def add(uuid=None, home_dtn=conf.settings['dtnd']['name']):
     if uuid is None:
         uuid = str(uuid4())
-    folder = db.Folder.create(uuid=uuid)
+    folder = db.Folder.create(uuid=uuid, home_dtn=home_dtn)
     storage.create_folder(folder)
     return folder
 
@@ -95,28 +95,28 @@ def move(uuid, src_path, dst_path):
 def get_destinations(uuid):
     folder = get(uuid)
     destinations = {}
-    folder_destinations = db.FolderDestination.select().\
-        where(db.FolderDestination.folder == folder)
+    folder_destinations = db.FolderDestination.select().where(
+            db.FolderDestination.folder == folder)
     for folder_dst in folder_destinations:
         dst_conf = dict(conf.destinations[folder_dst.destination])
         destinations[folder_dst.destination] = dst_conf
     return destinations
 
 
-def add_destination(uuid, dst_name):
+def add_destination(uuid, destination):
     folder = get(uuid)
-    if dst_name in conf.destinations:
-        db.FolderDestination.create(folder=folder, destination=dst_name)
+    if destination in conf.destinations:
+        db.FolderDestination.create(folder=folder, destination=destination)
     else:
         raise KeyError
 
 
-def remove_destination(uuid, dst_name):
+def remove_destination(uuid, destination):
     folder = get(uuid)
-    if dst_name in conf.destinations:
-        db.FolderDestination.delete().\
-            where(db.FolderDestination.folder == folder,
-                  db.FolderDestination.destination == dst_name)
+    if destination in conf.destinations:
+        db.FolderDestination.delete().where(
+                db.FolderDestination.folder == folder,
+                db.FolderDestination.destination == destination)
     else:
         raise KeyError
 
