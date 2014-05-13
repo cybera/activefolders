@@ -6,8 +6,14 @@ from uuid import UUID
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.conf as conf
+import activefolders.db as db
 
-app = bottle.Bottle()
+
+class App(bottle.Bottle):
+    def __init__(self, *args, **kwargs):
+        db.init()
+        transfers.check()
+        super(App, self).__init__(*args, **kwargs)
 
 
 def uuid_filter(_):
@@ -23,6 +29,7 @@ def uuid_filter(_):
     return regexp, to_python, to_url
 
 
+app = App()
 app.router.add_filter('uuid', uuid_filter)
 
 
@@ -210,9 +217,3 @@ def start_transfers(uuid):
         folder = folders.get(uuid)
     transfers.add_all(folder)
     transfers.check()
-
-
-def start():
-    app.run(host=conf.settings['dtnd']['host'],
-            port=conf.settings['dtnd']['listen_port'],
-            debug=True)

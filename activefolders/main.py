@@ -1,11 +1,11 @@
-import activefolders.api as api
-import activefolders.db as db
-import activefolders.controllers.transfers as transfers
+from activefolders.api import app
+import activefolders.conf as conf
 from activefolders.utils import LOG
 
 
-def default_start():
-    LOG.info("DTN daemon is starting")
-    db.init()
-    transfers.check()
-    api.start()
+def start():
+    host = conf.settings['dtnd']['host']
+    port = conf.settings['dtnd']['listen_port']
+
+    LOG.info("DTN daemon is starting on {}:{}".format(host, conf))
+    app.run(host=host, port=port, debug=True)

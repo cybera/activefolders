@@ -5,4 +5,4 @@
 import activefolders.main as main
 
 
-main.default_start()
+main.start()
