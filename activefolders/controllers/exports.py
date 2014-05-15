@@ -24,7 +24,7 @@ def update(export):
     dst_conf = conf.destinations[destination]
 
     LOG.debug("Updating export {} for folder {} to {}, active: {}".format(
-        export.id, folder.uuid, dst_conf['url'], export.status, export.active))
+        export.id, folder.uuid, dst_conf['url'], export.active))
 
     if not export.active:
         try:

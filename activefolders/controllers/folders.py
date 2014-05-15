@@ -1,5 +1,6 @@
 from uuid import uuid4
 import importlib
+import json
 import activefolders.db as db
 import activefolders.conf as conf
 
@@ -8,27 +9,20 @@ STORAGE_MODULE = "activefolders.storage.{}".format(
 storage = importlib.import_module(STORAGE_MODULE)
 
 
+def _get_transport(destination):
+    transport_name = conf.destinations[destination]['transport']
+    transport_module = "activefolders.transports.{}".format(transport_name)
+    transport = importlib.import_module(transport_module)
+    return transport
+
+
 def get_all():
     folders = db.Folder.select()
-    return folders
-
-
-def get_all_dicts():
-    folders = {"folders": []}
-    for folder in db.Folder.select().dicts():
-        folder['last_changed'] = str(folder['last_changed'])
-        folders['folders'].append(folder)
-    return folders
+    return [f for f in folders]
 
 
 def get(uuid):
     folder = db.Folder.get(db.Folder.uuid == uuid)
-    return folder
-
-
-def get_dict(uuid):
-    folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
-    folder['last_changed'] = str(folder['last_changed'])
     return folder
 
 
@@ -100,15 +94,19 @@ def get_destinations(uuid):
     for folder_dst in folder_destinations:
         dst_conf = dict(conf.destinations[folder_dst.destination])
         destinations[folder_dst.destination] = dst_conf
+        destinations[folder_dst.destination]['credentials'] = folder_dst.credentials
     return destinations
 
 
-def add_destination(uuid, destination):
+def add_destination(uuid, destination, credentials):
     folder = get(uuid)
-    if destination in conf.destinations:
-        db.FolderDestination.create(folder=folder, destination=destination)
-    else:
-        raise KeyError
+    transport = _get_transport(destination)
+    if set(transport.CREDENTIALS) != set(credentials):
+        # TODO: Raise an error
+        return
+    folder_destination = db.FolderDestination.create(folder=folder,
+            destination=destination, credentials=credentials)
+    return folder_destination
 
 
 def remove_destination(uuid, destination):
@@ -116,7 +114,7 @@ def remove_destination(uuid, destination):
     if destination in conf.destinations:
         db.FolderDestination.delete().where(
                 db.FolderDestination.folder == folder,
-                db.FolderDestination.destination == destination)
+                db.FolderDestination.destination == destination).execute()
     else:
         raise KeyError
 

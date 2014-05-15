@@ -3,12 +3,24 @@ from uuid import UUID
 import os
 import bottle
 import peewee
+import json
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.controllers.exports as exports
 import activefolders.conf as conf
+import activefolders.db as db
 
-app = bottle.Bottle()
+app = bottle.Bottle(autojson=False)
+
+
+class JsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, db.JsonSerializer):
+            return obj.to_json()
+        return super(JsonEncoder, self).default(obj)
+
+
+app.install(bottle.JSONPlugin(json_dumps=lambda s: json.dumps(s, cls=JsonEncoder)))
 
 
 def uuid_filter(_):
@@ -63,9 +75,9 @@ def add_folder():
         # TODO: Figure out why destinations doesn't exist if it's empty
         old_destinations = folders.get_destinations(uuid)
         new_destinations = folder_data['destinations']
-        for dst in new_destinations:
+        for dst, dst_conf in new_destinations.items():
             if dst not in old_destinations:
-                folders.add_destination(uuid, dst)
+                folders.add_destination(uuid, dst, dst_conf['credentials'])
         for dst in old_destinations:
             if dst not in new_destinations:
                 folders.remove_destination(uuid, dst)
@@ -75,16 +87,14 @@ def add_folder():
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
-    all_folders = folders.get_all_dicts()
-    return all_folders
+    return folders.get_all()
 
 
 @app.get('/folders/<uuid:uuid>')
 def get_folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
-        folder = folders.get_dict(uuid)
-    return folder
+        return folders.get(uuid)
 
 
 @app.delete('/folders/<uuid:uuid>')
@@ -190,8 +200,9 @@ def get_folder_destinations(uuid):
 @app.post('/folders/<uuid:uuid>/destinations')
 def add_folder_destination(uuid):
     destination = bottle.request.query.dst
+    creds = bottle.request.json
     with handle_errors():
-        folders.add_destination(uuid, destination)
+        folders.add_destination(uuid, destination, creds)
     return "Destination added"
 
 
@@ -201,6 +212,12 @@ def remove_folder_destination(uuid):
     with handle_errors():
         folders.remove_destination(uuid, destination)
     return "Destination removed"
+
+
+@app.post('/folders/<uuid:uuid>/destinations/credentials')
+def set_credentials(uuid):
+    creds_data = bottle.request.json
+    dst = creds_data['destination']
 
 
 @app.post('/folders/<uuid:uuid>/start_transfers')

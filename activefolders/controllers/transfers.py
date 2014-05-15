@@ -16,7 +16,6 @@ def add_folder_to_dtn(folder, dtn_conf):
     url = dtn_conf['api'] + "/add_folder"
     headers = { 'Content-type': 'application/json' }
     destinations = folders.get_destinations(folder.uuid)
-    destinations = list(destinations.keys())
     folder_data = {
         'uuid': folder.uuid,
         'home_dtn': conf.settings['dtnd']['name'],

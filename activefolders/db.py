@@ -1,12 +1,35 @@
 import peewee
 import datetime
+import json
 import activefolders.conf as conf
 from uuid import UUID
 
 database = peewee.SqliteDatabase(None, fields={'text': 'text'})
 
 
-class BaseModel(peewee.Model):
+class JsonSerializer(object):
+    __json_public__ = None
+    __json_hidden__ =  None
+    __json_modifiers__ = None
+
+    def to_json(self):
+        field_names = self._meta.get_field_names()
+        public = self.__json_public__ or field_names
+        hidden =  self.__json_hidden__ or []
+        modifiers = self.__json_modifiers__ or dict()
+
+        rv = dict()
+        for key in public:
+            rv[key] = getattr(self, key)
+        for key, modifier in modifiers.items():
+            value = getattr(self, key)
+            rv[key] = modifier(value, self)
+        for key in hidden:
+            rv.pop(key, None)
+        return rv
+
+
+class BaseModel(peewee.Model, JsonSerializer):
     class Meta:
         database = database
 
@@ -18,10 +41,19 @@ class UUIDField(peewee.Field):
         return str(UUID(value))
 
 
+class JsonField(peewee.Field):
+    db_field = 'text'
+
+    def db_value(self, value):
+        return json.dumps(value)
+
+    def python_value(self, value):
+        return json.loads(value)
+
+
 class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
     dirty = peewee.BooleanField(default=False)
-    last_changed = peewee.DateTimeField(default=datetime.datetime.now)
     home_dtn = peewee.TextField()
 
     def path(self):
@@ -32,7 +64,7 @@ class Folder(BaseModel):
 class FolderDestination(BaseModel):
     folder = peewee.ForeignKeyField(Folder)
     destination = peewee.TextField()
-    credentials = peewee.TextField(null=True)
+    credentials = JsonField(null=True)
 
     class Meta:
         # Each destination can only exist once per folder
