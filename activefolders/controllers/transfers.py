@@ -44,8 +44,7 @@ def add_folder_to_dtn(folder, dtn_conf):
 
 def start(transfer):
     if transfer.to_dtn:
-        dtn = conf.destinations[transfer.destination]['dtn']
-        dst_conf = conf.dtns[dtn]
+        dst_conf = conf.dtns[transfer.destination]
     else:
         dst_conf = conf.destinations[transfer.destination]
     transport = get_transport(transfer)
@@ -55,9 +54,10 @@ def start(transfer):
 
 
 def update(transfer):
-    dst_conf = conf.destinations[transfer.destination]
     if transfer.to_dtn:
-        dst_conf = conf.dtns[dst_conf['dtn']]
+        dst_conf = conf.dtns[transfer.destination]
+    else:
+        dst_conf = conf.destinations[transfer.destination]
 
     LOG.debug("Checking transfer {} for folder {} to {}, current status {}".format(transfer.id, transfer.folder.uuid, dst_conf['url'], transfer.status))
 
