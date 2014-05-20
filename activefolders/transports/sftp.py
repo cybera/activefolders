@@ -10,7 +10,6 @@ CREDENTIALS = [ 'user', 'private_key' ]
 
 
 def _get_credentials(export):
-    destination = export.folder_destination.destination
     creds = export.folder_destination.credentials
     user = creds['user']
     key_string = creds['private_key']
@@ -28,7 +27,7 @@ def start_export(export):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(url, username=user, pkey=private_key)
     sftp = ssh.open_sftp()
- 
+
     try:
         os.mkdir(folder_path)
     except OSError:
