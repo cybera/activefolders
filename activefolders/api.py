@@ -1,10 +1,12 @@
 from contextlib import contextmanager
+from uuid import UUID
 import os
 import bottle
 import peewee
-from uuid import UUID
+import json
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
+import activefolders.controllers.exports as exports
 import activefolders.conf as conf
 import activefolders.db as db
 
@@ -14,6 +16,19 @@ class App(bottle.Bottle):
         db.init()
         transfers.check()
         super(App, self).__init__(*args, **kwargs)
+
+
+app = App(autojson=False)
+
+
+class JsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, db.JsonSerializer):
+            return obj.to_json()
+        return super(JsonEncoder, self).default(obj)
+
+
+app.install(bottle.JSONPlugin(json_dumps=lambda s: json.dumps(s, cls=JsonEncoder)))
 
 
 def uuid_filter(_):
@@ -29,7 +44,6 @@ def uuid_filter(_):
     return regexp, to_python, to_url
 
 
-app = App()
 app.router.add_filter('uuid', uuid_filter)
 
 
@@ -62,18 +76,16 @@ def add_folder():
     uuid = folder_data['uuid']
     if folders.exists(uuid):
         bottle.response.status = 200
-        folder = folders.get(uuid)
     else:
         bottle.response.status = 201
-        folder = folders.add(uuid)
-    folder.home_dtn = folder_data['home_dtn']
+        folders.add(uuid, folder_data['home_dtn'])
     if 'destinations' in folder_data:
         # TODO: Figure out why destinations doesn't exist if it's empty
         old_destinations = folders.get_destinations(uuid)
         new_destinations = folder_data['destinations']
-        for dst in new_destinations:
+        for dst, dst_conf in new_destinations.items():
             if dst not in old_destinations:
-                folders.add_destination(uuid, dst)
+                folders.add_destination(uuid, dst, dst_conf['credentials'])
         for dst in old_destinations:
             if dst not in new_destinations:
                 folders.remove_destination(uuid, dst)
@@ -83,16 +95,14 @@ def add_folder():
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
-    all_folders = folders.get_all_dicts()
-    return all_folders
+    return folders.get_all()
 
 
 @app.get('/folders/<uuid:uuid>')
 def get_folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
-        folder = folders.get_dict(uuid)
-    return folder
+        return folders.get(uuid)
 
 
 @app.delete('/folders/<uuid:uuid>')
@@ -197,23 +207,39 @@ def get_folder_destinations(uuid):
 
 @app.post('/folders/<uuid:uuid>/destinations')
 def add_folder_destination(uuid):
-    dst_name = bottle.request.query.dst
+    destination = bottle.request.query.dst
+    creds = bottle.request.json
     with handle_errors():
-        folders.add_destination(uuid, dst_name)
+        folders.add_destination(uuid, destination, creds)
     return "Destination added"
 
 
 @app.delete('/folders/<uuid:uuid>/destinations')
 def remove_folder_destination(uuid):
-    dst_name = bottle.request.query.dst
+    destination = bottle.request.query.dst
     with handle_errors():
-        folders.remove_destination(uuid, dst_name)
+        folders.remove_destination(uuid, destination)
     return "Destination removed"
+
+
+@app.post('/folders/<uuid:uuid>/destinations/credentials')
+def set_credentials(uuid):
+    creds_data = bottle.request.json
+    dst = creds_data['destination']
 
 
 @app.post('/folders/<uuid:uuid>/start_transfers')
 def start_transfers(uuid):
-    with handle_errors():
-        folder = folders.get(uuid)
-    transfers.add_all(folder)
+    transfers.add_all(uuid)
+    exports.add_all(uuid)
     transfers.check()
+<<<<<<< HEAD
+=======
+    exports.check()
+
+
+def start():
+    app.run(host=conf.settings['dtnd']['host'],
+            port=conf.settings['dtnd']['listen_port'],
+            debug=True)
+>>>>>>> refactor_transfers

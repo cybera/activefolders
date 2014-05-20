@@ -1,6 +1,7 @@
 from subprocess import Popen, DEVNULL, STDOUT
 import os.path
 import logging
+import activefolders.conf as conf
 
 LOG = logging.getLogger(__name__)
 PATH = "/usr"
@@ -19,8 +20,7 @@ if not os.path.isfile(BINARY):
     raise IOError("{} is not found".format(BINARY))
 
 
-def start_transfer(folder,
-                   dst_conf,
+def start_transfer(transfer,
                    parallel_streams=4,
                    concurrent_files=4,
                    offset=None,
@@ -35,11 +35,15 @@ def start_transfer(folder,
         assert offset
         opts += ["-len", str(length)]
 
-    transfer = default_behaviour + opts
-    transfer.append(folder.path() + '/')
-    transfer.append(dst_conf['url'] + '/' + folder.uuid + '/')
-    proc = Popen(transfer, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
-    LOG.debug("Initiated transfer {}:'{}'".format(id(proc), " ".join(transfer)))
+    folder = transfer.folder
+    dtn = transfer.dtn
+    dtn_conf = conf.dtns[dtn]
+
+    gridtftp_cmd = default_behaviour + opts
+    gridtftp_cmd.append(folder.path() + '/')
+    gridtftp_cmd.append(dtn_conf['url'] + '/' + folder.uuid + '/')
+    proc = Popen(gridtftp_cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
+    LOG.debug("Initiated transfer {}:'{}'".format(id(proc), " ".join(gridtftp_cmd)))
     return proc
 
 
