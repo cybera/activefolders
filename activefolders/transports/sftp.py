@@ -29,7 +29,7 @@ def start_export(export):
     sftp = ssh.open_sftp()
 
     try:
-        os.mkdir(folder_path)
+        sftp.mkdir(folder_path)
     except OSError:
         pass
     for root, dirs, files in os.walk(folder_path):
