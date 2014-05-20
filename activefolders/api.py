@@ -95,14 +95,14 @@ def add_folder():
 @app.get('/folders')
 def get_folders():
     """ Returns a list of all folders present on the DTN """
-    return folders.get_all()
+    return folders.get_all_dicts()
 
 
 @app.get('/folders/<uuid:uuid>')
 def get_folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
-        return folders.get(uuid)
+        return folders.get_dict(uuid)
 
 
 @app.delete('/folders/<uuid:uuid>')
@@ -233,13 +233,4 @@ def start_transfers(uuid):
     transfers.add_all(uuid)
     exports.add_all(uuid)
     transfers.check()
-<<<<<<< HEAD
-=======
     exports.check()
-
-
-def start():
-    app.run(host=conf.settings['dtnd']['host'],
-            port=conf.settings['dtnd']['listen_port'],
-            debug=True)
->>>>>>> refactor_transfers

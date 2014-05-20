@@ -18,11 +18,23 @@ def _get_transport(destination):
 
 def get_all():
     folders = db.Folder.select()
-    return [f for f in folders]
+    return folders
+
+
+def get_all_dicts():
+    folders = {"folders": []}
+    for folder in db.Folder.select().dicts():
+        folders['folders'].append(folder)
+    return folders
 
 
 def get(uuid):
     folder = db.Folder.get(db.Folder.uuid == uuid)
+    return folder
+
+
+def get_dict(uuid):
+    folder = db.Folder.select().where(db.Folder.uuid == uuid).dicts().get()
     return folder
 
 
