@@ -55,6 +55,7 @@ class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
     dirty = peewee.BooleanField(default=False)
     home_dtn = peewee.TextField()
+    results = peewee.BooleanField(default=False)
 
     def path(self):
         path = conf.settings['dtnd']['storage_path'] + '/' + self.uuid
@@ -62,9 +63,12 @@ class Folder(BaseModel):
 
 
 class FolderDestination(BaseModel):
-    folder = peewee.ForeignKeyField(Folder)
+    folder = peewee.ForeignKeyField(Folder, related_name='destinations')
+    results_folder = peewee.ForeignKeyField(Folder, related_name='results_for', null=True)
+    results_retrieved = peewee.BooleanField(default=False)
     destination = peewee.TextField()
     credentials = JsonField(null=True)
+    result_files = JsonField(null=True)
 
     class Meta:
         # Each destination can only exist once per folder

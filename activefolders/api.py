@@ -7,6 +7,7 @@ import json
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.controllers.exports as exports
+import activefolders.controllers.results as results
 import activefolders.conf as conf
 import activefolders.db as db
 
@@ -74,21 +75,37 @@ def add_folder():
     """ Adds existing folder from another DTN """
     folder_data = bottle.request.json
     uuid = folder_data['uuid']
+
     if folders.exists(uuid):
         bottle.response.status = 200
+        folder = folders.get(uuid)
     else:
         bottle.response.status = 201
-        folders.add(uuid, folder_data['home_dtn'])
+        folder = folders.add(uuid, folder_data['home_dtn'])
+
+    results_for = folder_data.get('results_for')
+    if results_for is not None:
+        # TODO: Check results_folder doesn't already exist
+        folder.results = True
+        folder.save()
+        parent = folders.get(results_for['folder'])
+        folder_dst = db.FolderDestination.get(
+            db.FolderDestination.folder == parent,
+            db.FolderDestination.destination == results_for['destination'])
+        folder_dst.results_folder = folder
+        folder_dst.save()
+
     if 'destinations' in folder_data:
         # TODO: Figure out why destinations doesn't exist if it's empty
         old_destinations = folders.get_destinations(uuid)
         new_destinations = folder_data['destinations']
         for dst, dst_conf in new_destinations.items():
             if dst not in old_destinations:
-                folders.add_destination(uuid, dst, dst_conf['credentials'])
+                folders.add_destination(uuid, dst, dst_conf)
         for dst in old_destinations:
             if dst not in new_destinations:
                 folders.remove_destination(uuid, dst)
+
     return "Folder added/updated"
 
 
@@ -208,9 +225,9 @@ def get_folder_destinations(uuid):
 @app.post('/folders/<uuid:uuid>/destinations')
 def add_folder_destination(uuid):
     destination = bottle.request.query.dst
-    creds = bottle.request.json
+    body = bottle.request.json
     with handle_errors():
-        folders.add_destination(uuid, destination, creds)
+        folders.add_destination(uuid, destination, body)
     return "Destination added"
 
 
@@ -222,10 +239,16 @@ def remove_folder_destination(uuid):
     return "Destination removed"
 
 
-@app.post('/folders/<uuid:uuid>/destinations/credentials')
-def set_credentials(uuid):
-    creds_data = bottle.request.json
-    dst = creds_data['destination']
+@app.get('/folders/<uuid:uuid>/results')
+def get_available_results(uuid):
+    with handle_errors():
+        available_results = results.get_all(uuid)
+    return available_results
+
+
+@app.get('/folders/<uuid:uuid>/check_results')
+def check_results(uuid):
+    results.check_all(uuid)
 
 
 @app.post('/folders/<uuid:uuid>/start_transfers')

@@ -3,17 +3,11 @@ import importlib
 import json
 import activefolders.db as db
 import activefolders.conf as conf
+import activefolders.utils as utils
 
 STORAGE_MODULE = "activefolders.storage.{}".format(
         conf.settings['dtnd']['storage'])
 storage = importlib.import_module(STORAGE_MODULE)
-
-
-def _get_transport(destination):
-    transport_name = conf.destinations[destination]['transport']
-    transport_module = "activefolders.transports.{}".format(transport_name)
-    transport = importlib.import_module(transport_module)
-    return transport
 
 
 def get_all():
@@ -107,17 +101,21 @@ def get_destinations(uuid):
         dst_conf = dict(conf.destinations[folder_dst.destination])
         destinations[folder_dst.destination] = dst_conf
         destinations[folder_dst.destination]['credentials'] = folder_dst.credentials
+        destinations[folder_dst.destination]['result_files'] = folder_dst.result_files
     return destinations
 
 
-def add_destination(uuid, destination, credentials):
+def add_destination(uuid, destination, body):
     folder = get(uuid)
-    transport = _get_transport(destination)
+    credentials = body['credentials']
+    # TODO: Verify results correctness
+    result_files = body.get('result_files')
+    transport = utils.get_transport(destination)
     if set(transport.CREDENTIALS) != set(credentials):
         # TODO: Raise an error
         return
     folder_destination = db.FolderDestination.create(folder=folder,
-            destination=destination, credentials=credentials)
+            destination=destination, credentials=credentials, result_files=result_files)
     return folder_destination
 
 

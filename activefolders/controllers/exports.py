@@ -4,18 +4,11 @@ import peewee
 import activefolders.db as db
 import activefolders.conf as conf
 import activefolders.controllers.folders as folders
+import activefolders.utils as utils
 
 LOG = logging.getLogger(__name__)
 
 handles = {}
-
-
-def get_transport(export):
-    dst_conf = conf.destinations[export.folder_destination.destination]
-    transport_name = dst_conf['transport']
-    transport_module = "activefolders.transports.{}".format(transport_name)
-    transport = importlib.import_module(transport_module)
-    return transport
 
 
 def update(export):
@@ -36,7 +29,7 @@ def update(export):
             export.save()
             LOG.debug("Export {} is now active".format(export.id))
 
-    transport = get_transport(export)
+    transport = utils.get_transport(destination)
     handle = handles.get(export.id)
     if handle is None:
         LOG.debug("No handle found for export {}, starting new export".format(export.id))

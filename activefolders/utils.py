@@ -1,6 +1,8 @@
 from uuid import UUID
 import logging
 import logging.config
+import importlib
+import activefolders.conf as conf
 
 LOGGING = {
     'version': 1,
@@ -38,6 +40,14 @@ LOGGING = {
 logging.config.dictConfig(LOGGING)
 
 LOG = logging.getLogger('dtnd')
+
+
+def get_transport(destination):
+    dst_conf = conf.destinations[destination]
+    name = dst_conf['transport']
+    transport_module = "activefolders.transports.{}".format(name)
+    transport = importlib.import_module(transport_module)
+    return transport
 
 
 def coerce_uuid(uuid):

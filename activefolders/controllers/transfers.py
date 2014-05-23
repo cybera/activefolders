@@ -21,6 +21,13 @@ def add_folder_to_dtn(folder, dtn_conf):
         'home_dtn': conf.settings['dtnd']['name'],
         'destinations': destinations
     }
+
+    if folder.results:
+        folder_dst = db.FolderDestination.get(db.FolderDestination.results_folder == folder)
+        folder_data['results_for'] = {}
+        folder_data['results_for']['folder'] = folder_dst.folder.uuid
+        folder_data['results_for']['destination'] = folder_dst.destination
+
     LOG.info("Adding folder {} to {}".format(folder.uuid, url))
     resp = requests.post(url, data=json.dumps(folder_data), headers=headers)
     if resp.status_code == 200 or resp.status_code == 201:
