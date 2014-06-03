@@ -15,7 +15,6 @@ import activefolders.db as db
 class App(bottle.Bottle):
     def __init__(self, *args, **kwargs):
         db.init()
-        transfers.check()
         super(App, self).__init__(*args, **kwargs)
 
 
