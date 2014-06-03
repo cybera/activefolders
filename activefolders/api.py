@@ -255,5 +255,5 @@ def check_results(uuid):
 def start_transfers(uuid):
     transfers.add_all(uuid)
     exports.add_all(uuid)
-    transfers.check()
+    transfers.check(uuid)
     exports.check()

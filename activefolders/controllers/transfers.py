@@ -105,7 +105,12 @@ def add_all(uuid):
         add(folder, dtn)
 
 
-def check():
-    transfers = db.Transfer.select()
+def check(uuid=None):
+    if uuid is None:
+        transfers = db.Transfer.select()
+    else:
+        folder = folders.get(uuid)
+        transfers = db.Transfer.select().where(db.Transfer.folder == folder)
+
     for transfer in transfers:
         update(transfer)

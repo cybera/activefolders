@@ -72,5 +72,6 @@ def add_all(uuid):
 
 def check():
     exports = db.Export.select()
+
     for export in exports:
         update(export)
