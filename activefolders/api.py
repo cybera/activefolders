@@ -158,8 +158,9 @@ def put_file(uuid, filepath):
 
 @app.get('/folders/<uuid:uuid>/files/<filepath:path>')
 def get_file(uuid, filepath=''):
-    print(uuid, filepath)
-    return folders.get_file(uuid, filepath, bottle.static_file)
+    code, response = folders.get_file(uuid, filepath, bottle.static_file)
+    bottle.response.status = code
+    return response
 
 app.route('/folders/<uuid:uuid>/files/', ['GET'], get_file)
 
