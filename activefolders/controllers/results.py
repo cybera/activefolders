@@ -25,7 +25,7 @@ def get_all(uuid):
 
     for folder_dst in folder_dsts:
         dst = folder_dst.destination
-        results[dst] = folder_dst.results_folder.uuid
+        results[dst] = folder_dst.results_folder.uuid if folder_dst.results_folder else None
 
     return results
 
