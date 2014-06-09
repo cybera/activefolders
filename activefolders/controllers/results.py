@@ -47,7 +47,7 @@ def check(folder_destination):
         results_folder = folder_destination.results_folder
         home_dtn = folder_destination.folder.home_dtn
         transfers.add(results_folder, home_dtn)
-        transfers.check()
+        transfers.check(results_folder.uuid)
 
 
 def check_all(uuid=None):
