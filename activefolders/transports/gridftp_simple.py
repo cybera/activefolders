@@ -1,4 +1,5 @@
 from subprocess import Popen, DEVNULL, STDOUT
+from activefolders.transports.base import TransferTransport
 import os.path
 import logging
 import activefolders.conf as conf
@@ -20,44 +21,46 @@ if not os.path.isfile(BINARY):
     raise IOError("{} is not found".format(BINARY))
 
 
-def start_transfer(transfer,
-                   parallel_streams=4,
-                   concurrent_files=4,
-                   offset=None,
-                   length=None):
-    opts = ["-p", str(parallel_streams),  # per file
-            "-cc", str(concurrent_files)]
+class Transport(TransferTransport):
+    def __init__(self, transfer):
+        super(Transport, self).__init__(transfer)
+        self._proc = None
 
-    # Partial transfer
-    if offset:
-        opts += ["-off", str(offset)]
-    if length:
-        assert offset
-        opts += ["-len", str(length)]
+    def start_transfer(self,
+                       parallel_streams=4,
+                       concurrent_files=4,
+                       offset=None,
+                       length=None):
+        opts = ["-p", str(parallel_streams),  # per file
+                "-cc", str(concurrent_files)]
 
-    folder = transfer.folder
-    dtn = transfer.dtn
-    dtn_conf = conf.dtns[dtn]
+        # Partial transfer
+        if offset:
+            opts += ["-off", str(offset)]
+        if length:
+            assert offset
+            opts += ["-len", str(length)]
 
-    gridtftp_cmd = default_behaviour + opts
-    gridtftp_cmd.append(folder.path() + '/')
-    gridtftp_cmd.append(dtn_conf['url'] + '/' + folder.uuid + '/')
-    proc = Popen(gridtftp_cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
-    LOG.debug("Initiated transfer {}:'{}'".format(id(proc), " ".join(gridtftp_cmd)))
-    return proc
+        folder = self._transfer.folder
+        dtn = self._transfer.dtn
+        dtn_conf = conf.dtns[dtn]
 
+        gridtftp_cmd = default_behaviour + opts
+        gridtftp_cmd.append(folder.path() + '/')
+        gridtftp_cmd.append(dtn_conf['url'] + '/' + folder.uuid + '/')
+        self._proc = Popen(gridtftp_cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
+        LOG.debug("Initiated transfer {}:'{}'".format(id(self._proc), " ".join(gridtftp_cmd)))
 
-def stop_transfer(proc):
-    LOG.debug("Killing transfer process {}".format(id(proc)))
-    return proc.kill()
+    def stop_transfer(self):
+        LOG.debug("Killing transfer process {}".format(id(self._proc)))
+        self._proc.kill()
 
-
-def transfer_success(proc):
-    LOG.debug("Checking transfer process {}".format(id(proc)))
-    retcode = proc.poll()
-    if retcode is None:
-        return None
-    elif retcode == 0:
-        return True
-    else:
-        return False
+    def transfer_success(self):
+        LOG.debug("Checking transfer process {}".format(id(self._proc)))
+        retcode = self._proc.poll()
+        if retcode is None:
+            return None
+        elif retcode == 0:
+            return True
+        else:
+            return False

@@ -1,5 +1,4 @@
 import logging
-import importlib
 import peewee
 import activefolders.db as db
 import activefolders.conf as conf
@@ -33,10 +32,11 @@ def update(export):
     handle = handles.get(export.id)
     if handle is None:
         LOG.debug("No handle found for export {}, starting new export".format(export.id))
-        handle = transport.start_export(export)
-        handles[export.id] = transport.start_export(export)
+        handle = transport.Transport(export.folder_destination)
+        handles[export.id] = handle
+        handle.start_export()
 
-    export_success = transport.success(handle)
+    export_success = handle.export_success()
     if export_success:
         LOG.debug("Export {} complete".format(export.id))
         del handles[export.id]

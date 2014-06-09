@@ -1,6 +1,6 @@
-import requests
 import activefolders.db as db
 import activefolders.conf as conf
+import activefolders.requests as requests
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
@@ -31,23 +31,23 @@ def get_all(uuid):
 
 
 def check(folder_destination):
-    transport = utils.get_transport(folder_destination.destination)
+    transport_module = utils.get_transport(folder_destination.destination)
+    transport = transport_module.Transport(folder_destination)
 
-    if transport.results_available(folder_destination):
-        if folder_destination.results_folder is None:
-            results_folder = folders.add()
-            results_folder.results = True
-            results_folder.save()
-            folder_destination.results_folder = results_folder
-            folder_destination.save()
-
-        transport.get_results(folder_destination)
-        folder_destination.results_retrieved = True
+    if folder_destination.results_folder is None:
+        results_folder = folders.add()
+        results_folder.results = True
+        results_folder.save()
+        folder_destination.results_folder = results_folder
         folder_destination.save()
-        results_folder = folder_destination.results_folder
-        home_dtn = folder_destination.folder.home_dtn
-        transfers.add(results_folder, home_dtn)
-        transfers.check()
+
+    transport.get_results(folder_destination)
+    #folder_destination.results_retrieved = True
+    folder_destination.save()
+    results_folder = folder_destination.results_folder
+    home_dtn = folder_destination.folder.home_dtn
+    transfers.add(results_folder, home_dtn)
+    transfers.check(results_folder.uuid)
 
 
 def check_all(uuid=None):
@@ -65,7 +65,5 @@ def check_all(uuid=None):
         if dst_dtn == conf.settings['dtnd']['name']:
             check(folder_dst)
         else:
-            uuid = folder_dst.folder.uuid
-            dtn_conf = conf.dtns[dst_dtn]
-            url = dtn_conf['api'] + "/folders/{}/check_results".format(uuid)
-            requests.get(url)
+            request = requests.CheckResultsRequest(conf.dtns[dst_dtn], folder_dst.folder)
+            request.execute()

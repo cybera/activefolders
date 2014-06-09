@@ -1,11 +1,10 @@
 import peewee
-import requests
 import logging
-import json
 import activefolders.conf as conf
 import activefolders.db as db
 import activefolders.controllers.folders as folders
 import activefolders.transports.gridftp_simple as transport
+import activefolders.requests as requests
 
 LOG = logging.getLogger(__name__)
 
@@ -13,27 +12,14 @@ handles = {}
 
 
 def add_folder_to_dtn(folder, dtn_conf):
-    url = dtn_conf['api'] + "/add_folder"
-    headers = { 'Content-type': 'application/json' }
-    destinations = folders.get_destinations(folder.uuid)
-    folder_data = {
-        'uuid': folder.uuid,
-        'home_dtn': conf.settings['dtnd']['name'],
-        'destinations': destinations
-    }
+    request = requests.AddFolderRequest(dtn_conf, folder)
+    LOG.info("Adding folder {} to {}".format(folder.uuid, dtn_conf['api']))
+    resp = request.execute()
 
-    if folder.results:
-        folder_dst = db.FolderDestination.get(db.FolderDestination.results_folder == folder)
-        folder_data['results_for'] = {}
-        folder_data['results_for']['folder'] = folder_dst.folder.uuid
-        folder_data['results_for']['destination'] = folder_dst.destination
-
-    LOG.info("Adding folder {} to {}".format(folder.uuid, url))
-    resp = requests.post(url, data=json.dumps(folder_data), headers=headers)
     if resp.status_code == 200 or resp.status_code == 201:
         return 0
     else:
-        LOG.error("Adding folder {} to {} failed with error: {}".format(folder.uuid, url, resp.text))
+        LOG.error("Adding folder {} to {} failed with error: {}".format(folder.uuid, dtn_conf['api'], resp.text))
         return 1
 
 
@@ -59,9 +45,10 @@ def update(transfer):
     if transfer.status == db.Transfer.IN_PROGRESS:
         handle = handles.get(transfer.id)
         if handle is None:
-            handle = transport.start_transfer(transfer)
+            handle = transport.Transport(transfer)
             handles[transfer.id] = handle
-        transfer_success = transport.transfer_success(handle)
+            handle.start_transfer()
+        transfer_success = handle.transfer_success()
         if transfer_success:
             LOG.debug("Transfer {} complete".format(transfer.id))
             transfer.status = db.Transfer.GET_ACKNOWLEDGMENT
@@ -73,8 +60,8 @@ def update(transfer):
     if transfer.status == db.Transfer.GET_ACKNOWLEDGMENT:
         # TODO: Acknowledge transfer instead of using start_transfers
         LOG.debug("Transfer {} was to DTN, getting acknowledgement".format(transfer.id))
-        api_url = dtn_conf['api']
-        resp = requests.post(api_url + '/folders/{}/start_transfers'.format(folder.uuid))
+        request = requests.StartTransfersRequest(dtn_conf, folder)
+        resp = request.execute()
         if resp.status_code == 200:
             transfer.delete_instance()
 
