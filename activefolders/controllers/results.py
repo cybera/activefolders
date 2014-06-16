@@ -1,10 +1,12 @@
-import requests
+from requests_futures.session import FuturesSession
 import activefolders.db as db
 import activefolders.conf as conf
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
 
+
+session = FuturesSession()
 
 def get(uuid, destination):
     """ Returns results for specific destination for folder specified by uuid """
@@ -68,4 +70,4 @@ def check_all(uuid=None):
             uuid = folder_dst.folder.uuid
             dtn_conf = conf.dtns[dst_dtn]
             url = dtn_conf['api'] + "/folders/{}/check_results".format(uuid)
-            requests.get(url)
+            session.get(url)

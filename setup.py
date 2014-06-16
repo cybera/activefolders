@@ -15,7 +15,7 @@ setup(
     url="https://github.com/cybera/active-folders",
     description="A gridftp wrapper intended to provide Dropbox-like service to scientists",
     long_description=read('README.md'),
-    install_requires=["bottle", "paramiko", "peewee", "requests"],
+    install_requires=["bottle", "paramiko", "peewee", "requests", "requests-futures"],
     entry_points={
         'console_scripts': ["dtnd = activefolders.main:start"]
     }
