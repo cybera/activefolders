@@ -33,21 +33,20 @@ def get_all(uuid):
 def check(folder_destination):
     transport = utils.get_transport(folder_destination.destination)
 
-    if transport.results_available(folder_destination):
-        if folder_destination.results_folder is None:
-            results_folder = folders.add()
-            results_folder.results = True
-            results_folder.save()
-            folder_destination.results_folder = results_folder
-            folder_destination.save()
-
-        transport.get_results(folder_destination)
-        folder_destination.results_retrieved = True
+    if folder_destination.results_folder is None:
+        results_folder = folders.add()
+        results_folder.results = True
+        results_folder.save()
+        folder_destination.results_folder = results_folder
         folder_destination.save()
-        results_folder = folder_destination.results_folder
-        home_dtn = folder_destination.folder.home_dtn
-        transfers.add(results_folder, home_dtn)
-        transfers.check(results_folder.uuid)
+
+    transport.get_results(folder_destination)
+    #folder_destination.results_retrieved = True
+    folder_destination.save()
+    results_folder = folder_destination.results_folder
+    home_dtn = folder_destination.folder.home_dtn
+    transfers.add(results_folder, home_dtn)
+    transfers.check(results_folder.uuid)
 
 
 def check_all(uuid=None):
