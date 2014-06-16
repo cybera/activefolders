@@ -70,8 +70,13 @@ def add_all(uuid):
         add(folder_dst)
 
 
-def check():
-    exports = db.Export.select()
+def check(uuid=None):
+    if uuid is None:
+        exports = db.Export.select()
+    else:
+        folder = folders.get(uuid)
+        exports = db.Export.select().join(db.FolderDestination).where(
+                db.FolderDestination.folder == folder)
 
     for export in exports:
         update(export)

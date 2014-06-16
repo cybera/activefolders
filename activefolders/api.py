@@ -259,4 +259,4 @@ def start_transfers(uuid):
     transfers.add_all(uuid)
     exports.add_all(uuid)
     transfers.check(uuid)
-    exports.check()
+    exports.check(uuid)
