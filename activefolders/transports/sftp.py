@@ -46,7 +46,10 @@ def start_export(export):
         remote_root = os.path.join(home_dir, relative_root)
         for d in dirs:
             remote_path = os.path.join(remote_root, d)
-            sftp.mkdir(remote_path)
+            try:
+                sftp.mkdir(remote_path)
+            except OSError:
+                pass
         for f in files:
             remote_path = os.path.join(remote_root, f)
             local_path = os.path.join(root, f)

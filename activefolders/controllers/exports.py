@@ -34,7 +34,7 @@ def update(export):
     if handle is None:
         LOG.debug("No handle found for export {}, starting new export".format(export.id))
         handle = transport.start_export(export)
-        handles[export.id] = transport.start_export(export)
+        handles[export.id] = handle
 
     export_success = transport.success(handle)
     if export_success:
