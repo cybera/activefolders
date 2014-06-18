@@ -1,4 +1,4 @@
-from requests_futures.session import FuturesSession
+from requests_futures.sessions import FuturesSession
 import activefolders.db as db
 import activefolders.conf as conf
 import activefolders.controllers.folders as folders
