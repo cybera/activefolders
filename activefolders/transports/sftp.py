@@ -19,7 +19,7 @@ def _open_ssh(folder_destination):
     private_key = paramiko.RSAKey.from_private_key(StringIO(key_string))
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(url, username=user, pkey=private_key)
+    ssh.connect(url, username=user, pkey=private_key, allow_agent=False, look_for_keys=False)
     return ssh
 
 
