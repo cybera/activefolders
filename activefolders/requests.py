@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from requests_futures.sessions import FuturesSession
 import json
+import requests
 import activefolders.conf as conf
 
 
@@ -19,7 +20,7 @@ class GetRequest(Request):
         super(GetRequest, self).__init__(dtn_conf, command)
 
     def execute(self):
-        resp = self._session.get(self._url)
+        resp = requests.get(self._url)
         return resp
 
 
@@ -30,7 +31,7 @@ class PostRequest(Request):
         self._data = json.dumps(data)
 
     def execute(self):
-        resp = self._session.post(self._url, data=self._data, headers=self._headers)
+        resp = requests.post(self._url, data=self._data, headers=self._headers)
         return resp
 
 
@@ -38,6 +39,9 @@ class CheckResultsRequest(GetRequest):
     def __init__(self, dtn_conf, folder):
         command = "/folders/{}/check_results".format(folder.uuid)
         super(CheckResultsRequest, self).__init__(dtn_conf, command)
+
+    def execute(self):
+        self._session.get(self._url)
 
 
 class StartTransfersRequest(PostRequest):
