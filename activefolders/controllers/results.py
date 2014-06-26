@@ -41,7 +41,7 @@ def check(folder_destination):
         folder_destination.results_folder = results_folder
         folder_destination.save()
 
-    transport.get_results(folder_destination)
+    transport.get_results()
     #folder_destination.results_retrieved = True
     folder_destination.save()
     results_folder = folder_destination.results_folder

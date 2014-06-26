@@ -16,7 +16,9 @@ class Transport(ExportTransport):
         super(Transport, self).__init__(folder_destination)
         self._ssh = self._open_ssh()
         self._sftp = self._ssh.open_sftp()
-        self._remote_folder_path = os.path.join("/home",
+        dst = folder_destination.destination
+        home_dir = conf.destinations[dst]['home_dir']
+        self._remote_folder_path = os.path.join(home_dir,
                 folder_destination.credentials['user'],
                 folder_destination.folder.uuid)
 

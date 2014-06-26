@@ -66,7 +66,7 @@ class AddFolderRequest(PostRequest):
         }
 
         if folder.results:
-            folder_dst = folder.results_for
+            folder_dst = folder.results_for.get()
             data['results_for'] = {
                 'folder': folder_dst.folder.uuid,
                 'destination': folder_dst.destination
