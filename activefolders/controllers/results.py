@@ -6,8 +6,6 @@ import activefolders.controllers.transfers as transfers
 import activefolders.utils as utils
 
 
-session = FuturesSession()
-
 def get(uuid, destination):
     """ Returns results for specific destination for folder specified by uuid """
     folder = folders.get(uuid)
