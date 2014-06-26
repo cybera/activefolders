@@ -39,8 +39,8 @@ def put_file(folder, path, filename, data, offset):
 def get_file(folder, path, callback):
     fullpath = join_and_verify(folder, path)
     if os.path.isdir(fullpath):
-        return json.dumps([f for f in os.listdir(fullpath)])
-    return callback(path, root=folder.path())
+        return 201, json.dumps([f for f in os.listdir(fullpath)])
+    return 200, callback(path, root=folder.path())
 
 
 def copy(folder, src_path, dst_path):

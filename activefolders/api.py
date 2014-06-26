@@ -157,8 +157,12 @@ def put_file(uuid, filepath):
 
 
 @app.get('/folders/<uuid:uuid>/files/<filepath:path>')
-def get_file(uuid, filepath):
-    return folders.get_file(uuid, filepath, bottle.static_file)
+def get_file(uuid, filepath=''):
+    code, response = folders.get_file(uuid, filepath, bottle.static_file)
+    bottle.response.status = code
+    return response
+
+app.route('/folders/<uuid:uuid>/files/', ['GET'], get_file)
 
 
 @app.post('/folders/<uuid:uuid>/fileops/create_dir')
@@ -255,4 +259,4 @@ def start_transfers(uuid):
     transfers.add_all(uuid)
     exports.add_all(uuid)
     transfers.check(uuid)
-    exports.check()
+    exports.check(uuid)
