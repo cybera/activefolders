@@ -1,8 +1,8 @@
-from subprocess import Popen, DEVNULL, STDOUT
-from activefolders.transports.base import TransferTransport
+import subprocess
 import os.path
 import logging
 import activefolders.conf as conf
+import activefolders.transports.base as base
 
 LOG = logging.getLogger(__name__)
 PATH = "/usr"
@@ -21,12 +21,8 @@ if not os.path.isfile(BINARY):
     raise IOError("{} is not found".format(BINARY))
 
 
-class Transport(TransferTransport):
-    def __init__(self, transfer):
-        super(Transport, self).__init__(transfer)
-        self._proc = None
-
-    def start_transfer(self,
+class DtnTransport(base.DtnTransport):
+    def _start_transport(self,
                        parallel_streams=4,
                        concurrent_files=4,
                        offset=None,
@@ -48,19 +44,5 @@ class Transport(TransferTransport):
         gridtftp_cmd = default_behaviour + opts
         gridtftp_cmd.append(folder.path() + '/')
         gridtftp_cmd.append(dtn_conf['url'] + '/' + folder.uuid + '/')
-        self._proc = Popen(gridtftp_cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=STDOUT)
-        LOG.debug("Initiated transfer {}:'{}'".format(id(self._proc), " ".join(gridtftp_cmd)))
-
-    def stop_transfer(self):
-        LOG.debug("Killing transfer process {}".format(id(self._proc)))
-        self._proc.kill()
-
-    def transfer_success(self):
-        LOG.debug("Checking transfer process {}".format(id(self._proc)))
-        retcode = self._proc.poll()
-        if retcode is None:
-            return None
-        elif retcode == 0:
-            return True
-        else:
-            return False
+        LOG.debug("Initiating transfer:'{}'".format(" ".join(gridtftp_cmd)))
+        subprocess.check_call(gridtftp_cmd)

@@ -251,7 +251,7 @@ def get_available_results(uuid):
 
 @app.get('/folders/<uuid:uuid>/check_results')
 def check_results(uuid):
-    results.check_all(uuid)
+    results.check(uuid)
 
 
 @app.post('/folders/<uuid:uuid>/start_transfers')

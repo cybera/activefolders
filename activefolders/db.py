@@ -88,19 +88,9 @@ class Export(BaseModel):
 
 
 class Transfer(BaseModel):
-    CREATE_FOLDER = 'create_folder'
-    IN_PROGRESS = 'in_progress'
-    GET_ACKNOWLEDGMENT = 'get_acknowledgement'
-    STATUS_CHOICES = (
-        (CREATE_FOLDER, 'Creating folder'),
-        (IN_PROGRESS, 'In progress'),
-        (GET_ACKNOWLEDGMENT, 'Getting acknowledgement'),
-    )
-
     folder = peewee.ForeignKeyField(Folder)
     dtn = peewee.TextField()
     active = peewee.BooleanField(default=False)
-    status = peewee.TextField(default=CREATE_FOLDER, choices=STATUS_CHOICES)
 
     class Meta:
         # Only one pending and one active transfer per folder destination

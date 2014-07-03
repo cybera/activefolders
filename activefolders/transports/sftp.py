@@ -1,26 +1,26 @@
 from io import StringIO
-from activefolders.transports.base import ExportTransport
 import logging
 import paramiko
 import os
 import stat
 import activefolders.conf as conf
+import activefolders.transports.base as base
 
 LOG = logging.getLogger(__name__)
 
+CREDENTIALS = [ 'user', 'private_key' ]
 
-class Transport(ExportTransport):
-    CREDENTIALS = [ 'user', 'private_key' ]
 
-    def __init__(self, folder_destination):
-        super(Transport, self).__init__(folder_destination)
+class SftpMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._ssh = self._open_ssh()
         self._sftp = self._ssh.open_sftp()
-        dst = folder_destination.destination
+        dst = self._folder_destination.destination
         home_dir = conf.destinations[dst]['home_dir']
         self._remote_folder_path = os.path.join(home_dir,
-                folder_destination.credentials['user'],
-                folder_destination.folder.uuid)
+                self._folder_destination.credentials['user'],
+                self._folder_destination.folder.uuid)
 
     def _open_ssh(self):
         destination = self._folder_destination.destination
@@ -34,7 +34,9 @@ class Transport(ExportTransport):
         ssh.connect(url, username=user, pkey=private_key)
         return ssh
 
-    def start_export(self):
+
+class DestinationTransport(SftpMixin, base.DestinationTransport):
+    def _start_transport(self):
         folder = self._folder_destination.folder
         folder_path = folder.path()
 
@@ -54,29 +56,8 @@ class Transport(ExportTransport):
                 local_path = os.path.join(root, f)
                 self._sftp.put(local_path, remote_path)
 
-    def export_success(self):
-        return True
 
-    def results_available(self):
-        result_files = self._folder_destination.result_files
-
-        for result_file in result_files:
-            try:
-                remote_path = os.path.join(self._remote_folder_path, result_file)
-                self._sftp.stat(remote_path)
-            except IOError:
-                return False
-
-        return True
-
-    def get_results(self):
-        result_files = self._folder_destination.result_files
-
-        if result_files is None:
-            self._auto_results()
-        else:
-            self._results()
-
+class ResultsTransport(SftpMixin, base.ResultsTransport):
     def _relative_path(self, remote_file):
         remote_path = self._remote_path(remote_file)
         return remote_path[len(self._remote_folder_path):].lstrip('/')

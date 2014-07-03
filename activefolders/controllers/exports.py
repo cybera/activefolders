@@ -28,24 +28,23 @@ def update(export):
             export.save()
             LOG.debug("Export {} is now active".format(export.id))
 
-    transport = utils.get_transport(destination)
     handle = handles.get(export.id)
     if handle is None:
         LOG.debug("No handle found for export {}, starting new export".format(export.id))
-        handle = transport.Transport(export.folder_destination)
+        transport = utils.get_transport(destination)
+        handle = transport.DestinationTransport(export.folder_destination)
         handles[export.id] = handle
-        handle.start_export()
-
-    export_success = handle.export_success()
-    if export_success:
+        handle.start()
+    elif handle.is_alive():
+        LOG.debug("Export {} in progress".format(export.id))
+        return
+    elif handle.success:
         LOG.debug("Export {} complete".format(export.id))
         del handles[export.id]
         export.delete_instance()
-    elif export_success == False:
+    else:
         LOG.error("Export {} failed".format(export.id))
         del handles[export.id]
-    else:
-        LOG.debug("Export {} in progress".format(export.id))
 
 
 def add(folder_destination):
