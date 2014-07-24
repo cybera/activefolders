@@ -1,14 +1,7 @@
 import peewee
-import logging
 import activefolders.conf as conf
 import activefolders.db as db
 import activefolders.controllers.folders as folders
-import activefolders.transports.gridftp_simple as transport
-import activefolders.requests as requests
-
-LOG = logging.getLogger(__name__)
-
-handles = {}
 
 
 def add(folder, dtn):
@@ -35,14 +28,3 @@ def add_all(uuid):
         dtns.add(dtn)
     for dtn in dtns:
         add(folder, dtn)
-
-
-def check(uuid=None):
-    if uuid is None:
-        transfers = db.Transfer.select()
-    else:
-        folder = folders.get(uuid)
-        transfers = db.Transfer.select().where(db.Transfer.folder == folder)
-
-    for transfer in transfers:
-        update(transfer)

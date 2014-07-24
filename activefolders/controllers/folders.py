@@ -16,7 +16,7 @@ def get_all():
 
 
 def get_all_dicts():
-    folders = {"folders": []}
+    folders = { "folders": [] }
     for folder in db.Folder.select().dicts():
         folders['folders'].append(folder)
     return folders
@@ -127,15 +127,3 @@ def remove_destination(uuid, destination):
                 db.FolderDestination.destination == destination).execute()
     else:
         raise KeyError
-
-
-# def check():
-#     """ Initiate transfers on any dirty folders """
-#     folders = db.Folder.select()
-#     for folder in folders:
-#         time_delta = datetime.datetime.now() - folder.last_changed
-#         if folder.dirty and time_delta.total_seconds() > 60:
-#             transfers.add_all(folder)
-#             folder.dirty = False
-#             folder.save()
-#     threading.Timer(20, check).start()

@@ -42,12 +42,12 @@ logging.config.dictConfig(LOGGING)
 LOG = logging.getLogger('dtnd')
 
 
-def get_transport(destination):
+def get_transport_module(destination):
     dst_conf = conf.destinations[destination]
-    name = dst_conf['transport']
-    transport_module = "activefolders.transports.{}".format(name)
-    transport = importlib.import_module(transport_module)
-    return transport
+    transport_name = dst_conf['transport']
+    module_name = "activefolders.transports.{}".format(transport_name)
+    transport_module = importlib.import_module(module_name)
+    return transport_module
 
 
 def coerce_uuid(uuid):

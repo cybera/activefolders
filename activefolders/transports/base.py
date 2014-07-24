@@ -1,10 +1,11 @@
 from threading import Thread
 import activefolders.requests as requests
+import activefolders.conf as conf
 
 
 class Transport(Thread):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._success = False
         self._exception = None
 
@@ -33,38 +34,30 @@ class DtnTransport(Transport):
         self._transfer = transfer
 
     def _start_transport(self):
-        _add_folder_to_dtn()
-        _transfer()
-        _transfer_complete()
+        self._add_folder_to_dtn()
+        self._start_transfer()
+        self._transfer_complete()
 
-    def _transfer(self):
+    def _start_transfer(self):
         raise NotImplementedError
 
     def _add_folder_to_dtn(self):
         folder = self._transfer.folder
-        dtn = self._transfer.dtn
-        dtn_conf = conf.dtns[dtn]
+        dtn_conf = conf.dtns[self._transfer.dtn]
         request = requests.AddFolderRequest(dtn_conf, folder)
 
-        LOG.info("Adding folder {} to {}".format(folder.uuid, dtn_conf['api']))
         resp = request.execute()
-
-        if resp.status_code == 200 or resp.status_code == 201:
-            return 0
-        else:
-            LOG.error("Adding folder {} to {} failed with error: {}".format(folder.uuid, dtn_conf['api'], resp.text))
-            return 1 
+        if resp.status_code not in [ 200, 201 ]:
+            raise requests.UnexpectedResponse(resp)
 
     def _transfer_complete(self):
-        LOG.debug("Transfer {} complete, informing destination DTN".format(transfer.id))
+        folder = self._transfer.folder
+        dtn_conf = conf.dtns[self._transfer.dtn]
         request = requests.StartTransfersRequest(dtn_conf, folder)
-        resp = request.execute()
-        if resp.status_code == 200:
-            return 0
-        else:
-            LOG.error("DTN did not acknowledge transfer complete for transfer {}".format(transfer.id))
-            return 1
 
+        resp = request.execute()
+        if resp.status_code != 200:
+            raise requests.UnexpectedResponse(resp)
 
 class DestinationTransport(Transport):
     def __init__(self, export, *args, **kwargs):
@@ -72,9 +65,9 @@ class DestinationTransport(Transport):
         self._export = export
 
     def _start_transport(self):
-        _export()
+        self._start_export()
 
-    def _export(self):
+    def _start_export(self):
         raise NotImplementedError
 
 
@@ -82,16 +75,21 @@ class ResultsTransport(Transport):
     def __init__(self, folder_destination, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._folder_destination = folder_destination
+        self._new_results = False
 
     def _start_transport(self):
         result_files = self._folder_destination.result_files
         if result_files is None:
-            self._auto_results()
+            self._get_auto_results()
         else:
-            self._results()
+            self._get_results()
 
-    def _auto_results(self):
+    def _get_auto_results(self):
         raise NotImplementedError
 
-    def _results(self):
+    def _get_results(self):
         raise NotImplementedError
+
+    @property
+    def new_results(self):
+        return self._new_results

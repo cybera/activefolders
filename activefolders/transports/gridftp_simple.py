@@ -22,7 +22,7 @@ if not os.path.isfile(BINARY):
 
 
 class DtnTransport(base.DtnTransport):
-    def _start_transport(self,
+    def _start_transfer(self,
                        parallel_streams=4,
                        concurrent_files=4,
                        offset=None,

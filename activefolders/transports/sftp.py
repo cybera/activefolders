@@ -36,8 +36,8 @@ class SftpMixin:
 
 
 class DestinationTransport(SftpMixin, base.DestinationTransport):
-    def _start_transport(self):
-        folder = self._folder_destination.folder
+    def _start_export(self):
+        folder = self._export.folder_destination.folder
         folder_path = folder.path()
 
         try:
@@ -91,14 +91,14 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
 
         self._sftp.chdir(cwd)
 
-    def _results(self):
+    def _get_results(self):
         result_files = self._folder_destination.result_files
         self._sftp.chdir(self._remote_folder_path)
 
         for result_file in result_files:
             self._get(result_file)
 
-    def _auto_results(self):
+    def _get_auto_results(self):
         folder = self._folder_destination.folder
         dirs = [ self._remote_folder_path ]
         files = []

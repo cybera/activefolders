@@ -249,14 +249,7 @@ def get_available_results(uuid):
     return available_results
 
 
-@app.get('/folders/<uuid:uuid>/check_results')
-def check_results(uuid):
-    results.check(uuid)
-
-
 @app.post('/folders/<uuid:uuid>/start_transfers')
 def start_transfers(uuid):
     transfers.add_all(uuid)
     exports.add_all(uuid)
-    transfers.check(uuid)
-    exports.check(uuid)
