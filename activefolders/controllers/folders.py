@@ -110,12 +110,14 @@ def add_destination(uuid, destination, body):
     credentials = body['credentials']
     # TODO: Verify results correctness
     result_files = body.get('result_files')
+    check_for_results = body.get('check_for_results', False)
     transport = utils.get_transport(destination)
     if set(transport.CREDENTIALS) != set(credentials):
         # TODO: Raise an error
         return
     folder_destination = db.FolderDestination.create(folder=folder,
-            destination=destination, credentials=credentials, result_files=result_files)
+            destination=destination, credentials=credentials,
+            result_files=result_files, check_for_results=check_for_results)
     return folder_destination
 
 

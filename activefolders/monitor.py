@@ -137,13 +137,13 @@ class Monitor(Thread):
             else:
                 results_status.inital_results = True
             results_status.save()
+            self._transfer_results(folder_destination)
         elif results_status.inital_results:
             results_status.tries_without_changes += 1
             results_status.save()
             if results_status.tries_without_changes >= self.RESULTS_RETRIES:
                 folder_destination.results_retrieved = True
                 folder_destination.save()
-                self._transfer_results(folder_destination)
 
     def _transfer_results(self, folder_destination):
         results_folder = folder_destination.results_folder

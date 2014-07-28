@@ -58,6 +58,10 @@ class DestinationTransport(SftpMixin, base.DestinationTransport):
 
 
 class ResultsTransport(SftpMixin, base.ResultsTransport):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._retrieved_files = 0
+
     def _relative_path(self, remote_file):
         remote_path = self._remote_path(remote_file)
         return remote_path[len(self._remote_folder_path):].lstrip('/')
@@ -76,7 +80,15 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
         local_dir = "/".join(local_path.split("/")[:-1])
         os.makedirs(local_dir, exist_ok=True)
 
-        self._sftp.get(remote_path, local_path)
+        remote_file_size = self._sftp.stat(remote_path).st_size
+        try:
+            local_file_size = os.stat(local_path).st_size
+        except OSError:
+            local_file_size = -1
+
+        if remote_file_size != local_file_size:
+            self._sftp.get(remote_path, local_path)
+            self._retrieved_files += 1
 
     def _recursive_get(self, remote_dir):
         cwd = self._sftp.getcwd()
@@ -98,6 +110,8 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
         for result_file in result_files:
             self._get(result_file)
 
+        return self._retrieved_files > 0
+
     def _get_auto_results(self):
         folder = self._folder_destination.folder
         dirs = [ self._remote_folder_path ]
@@ -116,3 +130,5 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
                         self._recursive_get(f.filename)
                     else:
                         self._get(f.filename)
+
+        return self._retrieved_files > 0

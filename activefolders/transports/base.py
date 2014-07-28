@@ -75,14 +75,14 @@ class ResultsTransport(Transport):
     def __init__(self, folder_destination, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._folder_destination = folder_destination
-        self._new_results = False
+        self._new_results = None
 
     def _start_transport(self):
         result_files = self._folder_destination.result_files
         if result_files is None:
-            self._get_auto_results()
+            self._new_results = self._get_auto_results()
         else:
-            self._get_results()
+            self._new_results = self._get_results()
 
     def _get_auto_results(self):
         raise NotImplementedError
