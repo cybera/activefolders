@@ -4,10 +4,10 @@ import json
 import activefolders.conf as conf
 from uuid import UUID
 
-database = peewee.SqliteDatabase(None, fields={'text': 'text'})
+database = peewee.SqliteDatabase(None, fields={'text': 'text'}, threadlocals=True)
 
 
-class JsonSerializer(object):
+class JsonSerializer:
     __json_public__ = None
     __json_hidden__ =  None
     __json_modifiers__ = None
@@ -64,24 +64,20 @@ class Folder(BaseModel):
 
 class FolderDestination(BaseModel):
     folder = peewee.ForeignKeyField(Folder, related_name='destinations')
-    results_folder = peewee.ForeignKeyField(Folder, related_name='results_for', null=True)
-    results_retrieved = peewee.BooleanField(default=False)
     destination = peewee.TextField()
     credentials = JsonField(null=True)
-    result_files = JsonField(null=True)
     check_for_results = peewee.BooleanField(default=False)
+    result_files = JsonField(null=True)
+    results_folder = peewee.ForeignKeyField(Folder, related_name='results_for', null=True)
+    results_retrieved = peewee.BooleanField(default=False)
+    initial_results = peewee.BooleanField(default=False)
+    tries_without_changes = peewee.IntegerField(default=0)
 
     class Meta:
         # Each destination can only exist once per folder
         indexes = (
             (('folder', 'destination'), True),
         )
-
-
-class ResultsStatus(BaseModel):
-    folder_destination = peewee.ForeignKeyField(FolderDestination, related_name='results_status')
-    initial_results = peewee.BooleanField(default=False)
-    tries_without_changes = peewee.IntegerField(default=0)
 
 
 class Export(BaseModel):
@@ -108,7 +104,6 @@ class Transfer(BaseModel):
 
 def init():
     database.init(conf.settings['dtnd']['db_path'])
-    ResultsStatus.create_table(fail_silently=True)
     Transfer.create_table(fail_silently=True)
     Export.create_table(fail_silently=True)
     FolderDestination.create_table(fail_silently=True)

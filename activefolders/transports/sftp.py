@@ -16,8 +16,8 @@ class SftpMixin:
         super().__init__(*args, **kwargs)
         self._ssh = self._open_ssh()
         self._sftp = self._ssh.open_sftp()
-        dst = self._folder_destination.destination
-        home_dir = conf.destinations[dst]['home_dir']
+        destination = self._folder_destination.destination
+        home_dir = conf.destinations[destination]['home_dir']
         self._remote_folder_path = os.path.join(home_dir,
                 self._folder_destination.credentials['user'],
                 self._folder_destination.folder.uuid)
@@ -37,7 +37,7 @@ class SftpMixin:
 
 class DestinationTransport(SftpMixin, base.DestinationTransport):
     def _start_export(self):
-        folder = self._export.folder_destination.folder
+        folder = self._folder_destination.folder
         folder_path = folder.path()
 
         try:

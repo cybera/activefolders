@@ -13,8 +13,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Monitor(Thread):
-    SLEEP_TIME = conf.settings['dtnd']['update_interval'] / 3
-    RESULTS_RETRIES = conf.settings['dtnd']['results_retries']
+    SLEEP_TIME = conf.settings.getint('dtnd', 'update_interval') / 3
+    RESULTS_RETRIES = conf.settings.getint('dtnd', 'results_retries')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,7 +32,7 @@ class Monitor(Thread):
             sleep(self.SLEEP_TIME)
 
     def _update_transfers(self):
-        inactive_transfers = db.Transfer.select(db.Transfer.active==False)
+        inactive_transfers = db.Transfer.select().where(db.Transfer.active==False)
         for transfer in inactive_transfers:
             try:
                 db.Transfer.get(db.Transfer.folder==transfer.folder,
@@ -42,7 +42,7 @@ class Monitor(Thread):
                 transfer.active = True
                 transfer.save()
 
-        active_transfers = db.Transfer.select(db.Transfer.active==True)
+        active_transfers = db.Transfer.select().where(db.Transfer.active==True)
         for transfer in active_transfers:
             transport = self._transfers.get(transfer.id)
             if transport is None:
@@ -50,7 +50,7 @@ class Monitor(Thread):
                 self._transfers[transfer.id] = transport
                 transport.start()
 
-        for transfer_id, transport in self._transfers.items():
+        for transfer_id, transport in list(self._transfers.items()):
             transfer = db.Transfer.get(db.Transfer.id==transfer_id)
             if transport.is_alive():
                 continue
@@ -60,7 +60,7 @@ class Monitor(Thread):
             transfer.delete_instance()
 
     def _update_exports(self):
-        inactive_exports = db.Export.select(db.Export.active==False)
+        inactive_exports = db.Export.select().where(db.Export.active==False)
         for export in inactive_exports:
             try:
                 db.Export.get(db.Export.folder_destination==export.folder_destination,
@@ -69,7 +69,7 @@ class Monitor(Thread):
                 export.active = True
                 export.save()
 
-        active_exports = db.Export.select(db.Export.active==True)
+        active_exports = db.Export.select().where(db.Export.active==True)
         for export in active_exports:
             transport = self._exports.get(export.id)
             if transport is None:
@@ -78,7 +78,7 @@ class Monitor(Thread):
                 self._exports[export.id] = transport
                 transport.start()
 
-        for export_id, transport in self._exports.items():
+        for export_id, transport in list(self._exports.items()):
             export = db.Export.get(db.Export.id==export_id)
             if transport.is_alive():
                 continue
@@ -89,17 +89,13 @@ class Monitor(Thread):
 
     def _update_results(self):
         this_dtn = conf.settings['dtnd']['name']
-        reachable_destinations = [ dst for dst, dst_conf in conf.destinations if dst_conf['dtn'] == this_dtn ]
+        reachable_destinations = [ dst for dst, dst_conf in conf.destinations.items() if dst != 'DEFAULT' and dst_conf['dtn'] == this_dtn ]
         folder_destinations = db.FolderDestination.select().where(
             db.FolderDestination.check_for_results==True,
             db.FolderDestination.results_retrieved==False,
             db.FolderDestination.destination<<reachable_destinations)
 
         for folder_destination in folder_destinations:
-            results_status = folder_destination.results_status
-            if folder_destination.results_status is None:
-                results_status = db.ResultsStatus.create(folder_destination=folder_destination)
-
             if folder_destination.results_folder is None:
                 self._create_results_folder(folder_destination)
 
@@ -120,7 +116,7 @@ class Monitor(Thread):
             elif not transport.success:
                 LOG.error("Results retrieval for folder {} from {} failed with error: {}".format(uuid, destination, transport.exception))
             else:
-                self._update_results_status(transport.new_results, results_status, folder_destination)
+                self._update_results_status(transport, folder_destination)
             del self._results[uuid][destination]
 
     def _create_results_folder(self, folder_destination):
@@ -130,18 +126,18 @@ class Monitor(Thread):
         folder_destination.results_folder = results_folder
         folder_destination.save()
 
-    def _update_results_status(self, new_results, results_status, folder_destination):
-        if new_results:
-            if results_status.inital_results:
-                results_status.tries_without_changes = 0
+    def _update_results_status(self, transport, folder_destination):
+        if transport.new_results:
+            if folder_destination.initial_results:
+                folder_destination.tries_without_changes = 0
             else:
-                results_status.inital_results = True
-            results_status.save()
+                folder_destination.initial_results = True
+            folder_destination.save()
             self._transfer_results(folder_destination)
-        elif results_status.inital_results:
-            results_status.tries_without_changes += 1
-            results_status.save()
-            if results_status.tries_without_changes >= self.RESULTS_RETRIES:
+        elif folder_destination.initial_results:
+            folder_destination.tries_without_changes += 1
+            folder_destination.save()
+            if folder_destination.tries_without_changes >= self.RESULTS_RETRIES:
                 folder_destination.results_retrieved = True
                 folder_destination.save()
 

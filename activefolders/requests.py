@@ -46,7 +46,8 @@ class AddFolderRequest(PostRequest):
         for folder_dst in folder.destinations:
             destinations[folder_dst.destination] = {
                 'credentials': folder_dst.credentials,
-                'result_files': folder_dst.result_files
+                'result_files': folder_dst.result_files,
+                'check_for_results': folder_dst.check_for_results
             }
 
         data = {

@@ -111,7 +111,7 @@ def add_destination(uuid, destination, body):
     # TODO: Verify results correctness
     result_files = body.get('result_files')
     check_for_results = body.get('check_for_results', False)
-    transport = utils.get_transport(destination)
+    transport = utils.get_transport_module(destination)
     if set(transport.CREDENTIALS) != set(credentials):
         # TODO: Raise an error
         return
