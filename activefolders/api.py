@@ -134,6 +134,13 @@ def delta(uuid):
     pass
 
 
+@app.get('/folders/<uuid:uuid>/list_files')
+def list_files(uuid):
+    with handle_errors():
+        files = folders.list_files(uuid)
+    return files
+
+
 @app.post('/folders/<uuid:uuid>/files')
 def upload_file(uuid):
     upload = bottle.request.files.get('upload')

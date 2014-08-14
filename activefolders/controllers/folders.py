@@ -1,5 +1,6 @@
 from uuid import uuid4
 import importlib
+import os
 import json
 import activefolders.db as db
 import activefolders.conf as conf
@@ -51,6 +52,19 @@ def remove(uuid):
     folder = get(uuid)
     storage.delete_folder(folder)
     folder.delete_instance()
+
+
+def list_files(uuid):
+    folder = get(uuid)
+    files = { 'files': [] }
+
+    for root, _, files in os.walk(folder.path()):
+        for f in files:
+            path = os.path.join(root, f)
+            relative_path = path[len(folder.path()):].lstrip('/')
+            files['files'].append(relative_path)
+
+    return files
 
 
 def save_file(uuid, upload):
