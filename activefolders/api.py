@@ -22,6 +22,8 @@ app = App(autojson=False)
 
 
 def check(user, passwd):
+    if user in ["alex", "cam", "barton"]:
+        return True
     return False
 
 
