@@ -68,7 +68,7 @@ def handle_errors():
 
 
 @app.post('/create_folder')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def create_folder():
     """ Creates new folder on the DTN """
     folder = folders.add()
@@ -77,7 +77,7 @@ def create_folder():
 
 
 @app.post('/add_folder')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def add_folder():
     """ Adds existing folder from another DTN """
     folder_data = bottle.request.json
@@ -117,14 +117,14 @@ def add_folder():
 
 
 @app.get('/folders')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_folders():
     """ Returns a list of all folders present on the DTN """
     return folders.get_all_dicts()
 
 
 @app.get('/folders/<uuid:uuid>')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_folder(uuid):
     """ Returns metadata for a folder """
     with handle_errors():
@@ -132,7 +132,7 @@ def get_folder(uuid):
 
 
 @app.delete('/folders/<uuid:uuid>')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def delete_folder(uuid):
     """ Deletes a folder from the DTN """
     with handle_errors():
@@ -141,13 +141,13 @@ def delete_folder(uuid):
 
 
 @app.get('/folders/<uuid:uuid>/delta')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def delta(uuid):
     pass
 
 
 @app.post('/folders/<uuid:uuid>/files')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def upload_file(uuid):
     upload = bottle.request.files.get('upload')
     name, ext = os.path.splitext(upload.filename)
@@ -159,7 +159,7 @@ def upload_file(uuid):
 
 
 @app.put('/folders/<uuid:uuid>/files/<filepath:path>')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def put_file(uuid, filepath):
     if 'Content-Range' in bottle.request.headers:
         range_str = bottle.request.headers['Content-Range']
@@ -171,7 +171,7 @@ def put_file(uuid, filepath):
 
 
 @app.get('/folders/<uuid:uuid>/files/<filepath:path>')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_file(uuid, filepath=''):
     code, response = folders.get_file(uuid, filepath, bottle.static_file)
     bottle.response.status = code
@@ -181,7 +181,7 @@ app.route('/folders/<uuid:uuid>/files/', ['GET'], get_file)
 
 
 @app.post('/folders/<uuid:uuid>/fileops/create_dir')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def create_dir(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
@@ -191,7 +191,7 @@ def create_dir(uuid):
 
 
 @app.post('/folders/<uuid:uuid>/fileops/delete')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def delete(uuid):
     # TODO: Exception handling
     path = bottle.request.query.path
@@ -202,7 +202,7 @@ def delete(uuid):
 
 
 @app.post('/folders/<uuid:uuid>/fileops/copy')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def copy(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
@@ -214,7 +214,7 @@ def copy(uuid):
 
 
 @app.post('/folders/<uuid:uuid>/fileops/move')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def move(uuid):
     # TODO: Exception handling
     src_path = bottle.request.query.src_path
@@ -226,13 +226,13 @@ def move(uuid):
 
 
 @app.get('/destinations')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_destinations():
     return conf.destinations._sections
 
 
 @app.get('/destinations/<name>')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_destination(name):
     with handle_errors():
         dst = dict(conf.destinations[name].items())
@@ -240,7 +240,7 @@ def get_destination(name):
 
 
 @app.get('/folders/<uuid:uuid>/destinations')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_folder_destinations(uuid):
     with handle_errors():
         destinations = folders.get_destinations(uuid)
@@ -248,7 +248,7 @@ def get_folder_destinations(uuid):
 
 
 @app.post('/folders/<uuid:uuid>/destinations')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def add_folder_destination(uuid):
     destination = bottle.request.query.dst
     body = bottle.request.json
@@ -258,7 +258,7 @@ def add_folder_destination(uuid):
 
 
 @app.delete('/folders/<uuid:uuid>/destinations')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def remove_folder_destination(uuid):
     destination = bottle.request.query.dst
     with handle_errors():
@@ -267,7 +267,7 @@ def remove_folder_destination(uuid):
 
 
 @app.get('/folders/<uuid:uuid>/results')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def get_available_results(uuid):
     with handle_errors():
         available_results = results.get_all(uuid)
@@ -275,7 +275,7 @@ def get_available_results(uuid):
 
 
 @app.post('/folders/<uuid:uuid>/start_transfers')
-@app.auth_basic(check)
+@bottle.auth_basic(check)
 def start_transfers(uuid):
     transfers.add_all(uuid)
     exports.add_all(uuid)
