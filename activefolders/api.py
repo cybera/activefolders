@@ -24,7 +24,7 @@ app = App(autojson=False)
 def check(user, passwd):
     # We check only for token with the assumption they they are distributed in a secure manner
     # TODO: Design a proper token storage
-    if passwd in ["alex", "cam", "barton"]:
+    if user in ["alex", "cam", "barton"]:
         return True
     return False
 
