@@ -143,6 +143,7 @@ def delta(uuid):
 
 
 @app.get('/folders/<uuid:uuid>/list_files')
+@bottle.auth_basic(auth.check)
 def list_files(uuid):
     with handle_errors():
         files = folders.list_files(uuid)
