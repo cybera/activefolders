@@ -56,15 +56,15 @@ def remove(uuid):
 
 def list_files(uuid):
     folder = get(uuid)
-    files = { 'files': [] }
+    files_list = { 'files': [] }
 
     for root, _, files in os.walk(folder.path()):
         for f in files:
             path = os.path.join(root, f)
             relative_path = path[len(folder.path()):].lstrip('/')
-            files['files'].append(relative_path)
+            files_list['files'].append(relative_path)
 
-    return files
+    return files_list
 
 
 def save_file(uuid, upload):
