@@ -1,5 +1,4 @@
 import peewee
-import datetime
 import json
 import activefolders.conf as conf
 from uuid import UUID
@@ -9,13 +8,13 @@ database = peewee.SqliteDatabase(None, fields={'text': 'text'}, threadlocals=Tru
 
 class JsonSerializer:
     __json_public__ = None
-    __json_hidden__ =  None
+    __json_hidden__ = None
     __json_modifiers__ = None
 
     def to_json(self):
         field_names = self._meta.get_field_names()
         public = self.__json_public__ or field_names
-        hidden =  self.__json_hidden__ or []
+        hidden = self.__json_hidden__ or []
         modifiers = self.__json_modifiers__ or dict()
 
         rv = dict()
@@ -102,9 +101,33 @@ class Transfer(BaseModel):
         )
 
 
+class User(BaseModel):
+    name = peewee.CharField()
+    reg_date = peewee.DateTimeField()
+
+    class Meta:
+        indexes = (
+            (('name',), True),
+        )
+
+
+class Token(BaseModel):
+    user = peewee.ForeignKeyField(User, related_name='tokens')
+    data = peewee.TextField()
+    valid_from = peewee.DateTimeField()
+    valid_to = peewee.DateTimeField()
+
+    class Meta:
+        indexes = (
+            (('data',), True),
+        )
+
+
 def init():
     database.init(conf.settings['dtnd']['db_path'])
     Transfer.create_table(fail_silently=True)
     Export.create_table(fail_silently=True)
     FolderDestination.create_table(fail_silently=True)
     Folder.create_table(fail_silently=True)
+    User.create_table(fail_silently=True)
+    Token.create_table(fail_silently=True)
