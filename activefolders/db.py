@@ -102,9 +102,36 @@ class Transfer(BaseModel):
         )
 
 
+class Request(BaseModel):
+    GET = 'GET'
+    POST = 'POST'
+    DELETE = 'DELETE'
+    METHODS = (
+        (GET, 'GET'),
+        (POST, 'POST'),
+        (DELETE, 'DELETE'),
+    )
+
+    method = peewee.TextField(choices=METHODS)
+    dtn = peewee.TextField()
+    command = peewee.TextField()
+    headers = JsonField(null=True)
+    params = JsonField(null=True)
+    data = JsonField(null=True)
+    expected_responses = JsonField(null=True)
+    dtn = peewee.TextField()
+    failures = peewee.IntegerField(default=0)
+
+    class Meta:
+        indexes = (
+            (('command', 'headers', 'params', 'data', 'dtn'), True),
+        )
+
+
 def init():
     database.init(conf.settings['dtnd']['db_path'])
     Transfer.create_table(fail_silently=True)
     Export.create_table(fail_silently=True)
     FolderDestination.create_table(fail_silently=True)
     Folder.create_table(fail_silently=True)
+    Request.create_table(fail_silently=True)

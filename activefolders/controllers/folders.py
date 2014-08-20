@@ -1,9 +1,9 @@
 from uuid import uuid4
 import importlib
-import json
 import activefolders.db as db
 import activefolders.conf as conf
 import activefolders.utils as utils
+import activefolders.requests as requests
 
 STORAGE_MODULE = "activefolders.storage.{}".format(
         conf.settings['dtnd']['storage'])
@@ -49,6 +49,12 @@ def add(uuid=None, home_dtn=conf.settings['dtnd']['name']):
 def remove(uuid):
     # TODO: Remove outstanding transfers
     folder = get(uuid)
+
+    dtns = get_dtns(folder)
+    for dtn in dtns:
+        request = requests.DeleteFolderRequest(folder=folder, dtn=dtn)
+        request.execute_with_monitoring()
+
     storage.delete_folder(folder)
     folder.delete_instance()
 
@@ -106,26 +112,55 @@ def get_destinations(uuid):
 
 
 def add_destination(uuid, destination, body):
+    if destination not in conf.destinations:
+        raise KeyError
+
     folder = get(uuid)
-    credentials = body['credentials']
-    # TODO: Verify results correctness
     result_files = body.get('result_files')
     check_for_results = body.get('check_for_results', False)
+
     transport = utils.get_transport_module(destination)
+    credentials = body['credentials']
+    # TODO: Verify results correctness
     if set(transport.CREDENTIALS) != set(credentials):
         # TODO: Raise an error
         return
+
     folder_destination = db.FolderDestination.create(folder=folder,
             destination=destination, credentials=credentials,
             result_files=result_files, check_for_results=check_for_results)
+
+    dtns = get_dtns(folder)
+    for dtn in dtns:
+        request = requests.AddDestinationRequest(folder=folder, destination=destination, dtn=dtn)
+        request.execute_with_monitoring()
+
     return folder_destination
 
 
 def remove_destination(uuid, destination):
-    folder = get(uuid)
-    if destination in conf.destinations:
-        db.FolderDestination.delete().where(
-                db.FolderDestination.folder == folder,
-                db.FolderDestination.destination == destination).execute()
-    else:
+    if destination not in conf.destinations:
         raise KeyError
+
+    folder = get(uuid)
+
+    dtns = get_dtns(folder)
+    for dtn in dtns:
+        request = requests.RemoveDestinationRequest(folder=folder, destination=destination, dtn=dtn)
+        request.execute_with_monitoring()
+
+    db.FolderDestination.delete().where(
+            db.FolderDestination.folder == folder,
+            db.FolderDestination.destination == destination).execute()
+
+
+def get_dtns(folder):
+    dtns = set()
+    folder_destinations = db.FolderDestination.select().where(db.FolderDestination.folder==folder)
+    for folder_destination in folder_destinations:
+        dst = folder_destination.destination
+        dtn = conf.destinations[dst]['dtn']
+        if dtn != conf.settings['dtnd']['name']:
+            dtns.add(dtn)
+
+    return dtns

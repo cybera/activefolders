@@ -43,21 +43,22 @@ class DtnTransport(Transport):
 
     def _add_folder_to_dtn(self):
         folder = self._transfer.folder
-        dtn_conf = conf.dtns[self._transfer.dtn]
-        request = requests.AddFolderRequest(dtn_conf=dtn_conf, folder=folder)
+        dtn = self._transfer.dtn
+        request = requests.AddFolderRequest(dtn=dtn, folder=folder)
 
         resp = request.execute()
-        if resp.status_code not in [ 200, 201 ]:
+        if not request.success:
             raise requests.UnexpectedResponse(resp)
 
     def _transfer_complete(self):
         folder = self._transfer.folder
-        dtn_conf = conf.dtns[self._transfer.dtn]
-        request = requests.StartTransfersRequest(dtn_conf=dtn_conf, folder=folder)
+        dtn = self._transfer.dtn
+        request = requests.StartTransfersRequest(dtn=dtn, folder=folder)
 
         resp = request.execute()
-        if resp.status_code != 200:
+        if not request.success:
             raise requests.UnexpectedResponse(resp)
+
 
 class DestinationTransport(Transport):
     def __init__(self, export, *args, **kwargs):

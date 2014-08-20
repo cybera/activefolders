@@ -8,11 +8,12 @@ import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.transports.gridftp_simple as gridftp
 import activefolders.utils as utils
+import activefolders.requests as requests
 
 LOG = logging.getLogger(__name__)
 
 
-class Monitor(Thread):
+class TransportMonitor(Thread):
     SLEEP_TIME = conf.settings.getint('dtnd', 'update_interval') / 3
     RESULTS_RETRIES = conf.settings.getint('dtnd', 'results_retries')
 
@@ -89,7 +90,7 @@ class Monitor(Thread):
 
     def _update_results(self):
         this_dtn = conf.settings['dtnd']['name']
-        reachable_destinations = [ dst for dst, dst_conf in conf.destinations.items() if dst != 'DEFAULT' and dst_conf['dtn'] == this_dtn ]
+        reachable_destinations = [ dst for dst, dst_conf in conf.destinations.items() if dst != 'DEFAULT' and dst_conf['dtn'] == this_dtn ] # TODO: Avoid default section
         folder_destinations = db.FolderDestination.select().where(
             db.FolderDestination.check_for_results==True,
             db.FolderDestination.results_retrieved==False,
@@ -145,3 +146,31 @@ class Monitor(Thread):
         results_folder = folder_destination.results_folder
         home_dtn = folder_destination.folder.home_dtn
         transfers.add(results_folder, home_dtn)
+
+
+class RequestMonitor(Thread):
+    SLEEP_TIME = conf.settings.getint('dtnd', 'requests_update_interval')
+
+    def run(self):
+        while True:
+            self._update_requests()
+            sleep(self.SLEEP_TIME)
+
+    def _update_requests(self):
+        all_requests = db.Request.select()
+
+        for r in all_requests:
+            if r.dtn not in conf.dtns:
+                r.delete_instance()
+
+            request = requests.Request(r.dtn, r.command, r.method, r.headers, r.params, r.data, r.expected_responses)
+            resp = request.execute()
+            if request.success:
+                r.delete_instance()
+            else:
+                if resp is None:
+                    LOG.error("Request failed with no reponse")
+                else:
+                    LOG.error("Request failed with response: {}".format(resp.text))
+                r.failures += 1
+                r.save()
