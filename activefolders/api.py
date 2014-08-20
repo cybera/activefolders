@@ -281,5 +281,6 @@ def get_available_results(uuid):
 @app.post('/folders/<uuid:uuid>/start_transfers')
 @bottle.auth_basic(auth.check)
 def start_transfers(uuid):
-    transfers.add_all(uuid)
-    exports.add_all(uuid)
+    with handle_errors():
+        transfers.add_all(uuid)
+        exports.add_all(uuid)

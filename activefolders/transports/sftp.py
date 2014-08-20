@@ -14,8 +14,8 @@ CREDENTIALS = [ 'user', 'private_key' ]
 class SftpMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._ssh = self._open_ssh()
-        self._sftp = self._ssh.open_sftp()
+        self._ssh = None
+        self._sftp = None
         destination = self._folder_destination.destination
         home_dir = conf.destinations[destination]['home_dir']
         self._remote_folder_path = os.path.join(home_dir,
@@ -29,16 +29,17 @@ class SftpMixin:
         user = creds['user']
         key_string = creds['private_key']
         private_key = paramiko.RSAKey.from_private_key(StringIO(key_string))
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(url, username=user, pkey=private_key)
-        return ssh
+        self._ssh = paramiko.SSHClient()
+        self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._ssh.connect(url, username=user, pkey=private_key)
+        self._sftp = self._ssh.open_sftp()
 
 
 class DestinationTransport(SftpMixin, base.DestinationTransport):
     def _start_export(self):
         folder = self._folder_destination.folder
         folder_path = folder.path()
+        self._open_ssh()
 
         try:
             self._sftp.mkdir(self._remote_folder_path)
@@ -105,6 +106,7 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
 
     def _get_results(self):
         result_files = self._folder_destination.result_files
+        self._open_ssh()
         self._sftp.chdir(self._remote_folder_path)
 
         for result_file in result_files:
@@ -115,7 +117,7 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
     def _get_auto_results(self):
         folder = self._folder_destination.folder
         dirs = [ self._remote_folder_path ]
-        files = []
+        self._open_ssh()
 
         for d in dirs:
             self._sftp.chdir(d)
@@ -124,7 +126,8 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
                 local_path = self._local_path(f.filename, folder)
                 if os.path.exists(local_path):
                     if stat.S_ISDIR(f.st_mode):
-                        dirs.append(local_path)
+                        remote_path = self._remote_path(f.filename)
+                        dirs.append(remote_path)
                 else:
                     if stat.S_ISDIR(f.st_mode):
                         self._recursive_get(f.filename)

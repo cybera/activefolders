@@ -19,12 +19,7 @@ def add_all(uuid):
     folder = folders.get(uuid)
     if folder.home_dtn != conf.settings['dtnd']['name']:
         return
-    dtns = set()
-    folder_destinations = db.FolderDestination.select().where(
-            db.FolderDestination.folder == folder)
-    for folder_dst in folder_destinations:
-        destination = folder_dst.destination
-        dtn = conf.destinations[destination]['dtn']
-        dtns.add(dtn)
+
+    dtns = folders.get_dtns(folder)
     for dtn in dtns:
         add(folder, dtn)
