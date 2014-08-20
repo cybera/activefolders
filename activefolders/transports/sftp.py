@@ -126,7 +126,8 @@ class ResultsTransport(SftpMixin, base.ResultsTransport):
                 local_path = self._local_path(f.filename, folder)
                 if os.path.exists(local_path):
                     if stat.S_ISDIR(f.st_mode):
-                        dirs.append(local_path)
+                        remote_path = self._remote_path(f.filename)
+                        dirs.append(remote_path)
                 else:
                     if stat.S_ISDIR(f.st_mode):
                         self._recursive_get(f.filename)
