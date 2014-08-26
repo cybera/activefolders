@@ -3,6 +3,7 @@ import logging
 import logging.config
 import importlib
 import activefolders.conf as conf
+import activefolders.db as db
 
 LOGGING = {
     'version': 1,
@@ -52,3 +53,19 @@ def get_transport_module(destination):
 
 def coerce_uuid(uuid):
     return str(UUID(uuid))
+
+
+def remove_invalid():
+    """ Only call before starting TransportMonitor """
+    # Remove folder destinations not in conf.destinations
+    folder_destinations = db.FolderDestination.select()
+    for folder_destination in folder_destinations:
+        if folder_destination.destination not in conf.destinations:
+            # Recursive will also delete any invalidated exports
+            folder_destination.delete_instance(recursive=True)
+
+    # Remove transfers if dtn not in conf.dtns
+    transfers = db.Transfer.select()
+    for transfer in transfers:
+        if transfer.dtn not in conf.dtns:
+            transfer.delete_instance()
