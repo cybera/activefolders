@@ -71,6 +71,8 @@ class FolderDestination(BaseModel):
     results_retrieved = peewee.BooleanField(default=False)
     initial_results = peewee.BooleanField(default=False)
     tries_without_changes = peewee.IntegerField(default=0)
+    results_destination = peewee.TextField(null=True)
+    results_credentials = JsonField(null=True)
 
     class Meta:
         # Each destination can only exist once per folder
