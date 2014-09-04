@@ -8,15 +8,15 @@ import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
 import activefolders.controllers.exports as exports
 import activefolders.controllers.results as results
+import activefolders.controllers.auth as auth
 import activefolders.conf as conf
 import activefolders.db as db
-import activefolders.auth as auth
 
 
 class App(bottle.Bottle):
     def __init__(self, *args, **kwargs):
         db.init()
-        auth.populate_accounts(conf.settings.items("users"))
+        auth.init()
         super(App, self).__init__(*args, **kwargs)
 
 
