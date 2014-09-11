@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from requests.auth import HTTPBasicAuth
 import json
 import requests
 import activefolders.conf as conf
@@ -20,12 +21,14 @@ class Request:
         self._success = None
 
     def execute(self, *args, **kwargs):
+        secret = conf.settings['dtnd']['root_secret']
         try:
             resp = requests.request(self._method,
                                     self._url,
                                     headers=self._headers,
                                     params=self._params,
                                     data=json.dumps(self._data),
+                                    auth=HTTPBasicAuth(secret, None),
                                     *args, **kwargs)
         except requests.ConnectionError:
             resp = None
