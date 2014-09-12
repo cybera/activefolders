@@ -96,7 +96,9 @@ class AddFolderRequest(PostRequest):
             destinations[folder_dst.destination] = {
                 'credentials': folder_dst.credentials,
                 'result_files': folder_dst.result_files,
-                'check_for_results': folder_dst.check_for_results
+                'check_for_results': folder_dst.check_for_results,
+                'results_destination': folder_dst.results_destination,
+                'results_credentials': folder_dst.results_credentials
             }
 
         data = {
@@ -132,6 +134,8 @@ class AddDestinationRequest(PostRequest):
         data['credentials'] = folder_destination.credentials
         data['result_files'] = folder_destination.result_files
         data['check_for_results'] = folder_destination.check_for_results
+        data['results_destination'] = folder_destination.results_destination
+        data['results_credentials'] = folder_destination.results_credentials
         super().__init__(command=command, params=params, data=data, expected_responses=expected_responses, *args, **kwargs)
 
 
