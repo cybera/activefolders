@@ -47,6 +47,8 @@ class JsonField(peewee.Field):
         return json.dumps(value)
 
     def python_value(self, value):
+        if value is None:
+            value = 'null'
         return json.loads(value)
 
 
