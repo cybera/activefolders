@@ -141,7 +141,7 @@ class AddDestinationRequest(PostRequest):
 
 class RemoveDestinationRequest(DeleteRequest):
     def __init__(self, folder, destination, *args, **kwargs):
-        command = "folders/{}/destinations".format(folder.uuid)
+        command = "/folders/{}/destinations".format(folder.uuid)
         expected_responses = [ 200, 404 ]
         params = { 'dst': destination }
         super().__init__(command=command, params=params, expected_responses=expected_responses, *args, **kwargs)
