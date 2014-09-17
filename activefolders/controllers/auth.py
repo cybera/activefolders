@@ -132,6 +132,4 @@ def delete_user(username):
         return {"deleted": 0}
     q = db.User.delete().where(db.User.name == username)
     res = q.execute()
-    q = db.Token.delete().where(db.Token.user == user(username))
-    q.execute()
     return {"deleted": res}

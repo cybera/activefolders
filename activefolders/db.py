@@ -116,7 +116,7 @@ class User(BaseModel):
 
 
 class Token(BaseModel):
-    user = peewee.ForeignKeyField(User, related_name='tokens')
+    user = peewee.ForeignKeyField(User, related_name='tokens', on_delete='CASCADE')
     data = peewee.TextField()
     valid_from = peewee.DateTimeField()
     valid_to = peewee.DateTimeField()
