@@ -132,6 +132,8 @@ def add_destination(uuid, destination, body):
     folder = get(uuid)
     result_files = body.get('result_files')
     check_for_results = body.get('check_for_results', False)
+    results_destination = body.get('results_destination')
+    results_credentials = body.get('results_credentials')
 
     transport = utils.get_transport_module(destination)
     credentials = body['credentials']
@@ -142,7 +144,9 @@ def add_destination(uuid, destination, body):
 
     folder_destination = db.FolderDestination.create(folder=folder,
             destination=destination, credentials=credentials,
-            result_files=result_files, check_for_results=check_for_results)
+            result_files=result_files, check_for_results=check_for_results,
+            results_destination=results_destination,
+            results_credentials=results_credentials)
 
     dtns = get_dtns(folder)
     for dtn in dtns:
