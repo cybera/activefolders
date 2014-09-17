@@ -69,7 +69,7 @@ def user(username):
 
 def get_user(username):
     user = db.User.select().where(db.User.name == username).dicts().get()
-    return user.to_json()
+    return user
 
 
 def get_all_users():
@@ -128,6 +128,8 @@ def create_or_update_user(username):
 
 
 def delete_user(username):
+    if username == "root":
+        return {"deleted": 0}
     q = db.User.delete().where(db.User.name == username)
     res = q.execute()
     q = db.Token.delete().where(db.Token.user == user(username))
