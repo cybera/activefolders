@@ -11,6 +11,7 @@ import activefolders.controllers.results as results
 import activefolders.controllers.auth as auth
 import activefolders.conf as conf
 import activefolders.db as db
+import datetime
 
 
 class App(bottle.Bottle):
@@ -27,6 +28,8 @@ class JsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, db.JsonSerializer):
             return obj.to_json()
+        if isinstance(obj, datetime.datetime):
+            return str(obj)
         return super(JsonEncoder, self).default(obj)
 
 
@@ -284,3 +287,87 @@ def start_transfers(uuid):
     with handle_errors():
         transfers.add_all(uuid)
         exports.add_all(uuid)
+
+
+@contextmanager
+def handle_user_errors():
+    try:
+        yield
+    except ValueError:
+        bottle.abort(400, "Invalid username")
+    except peewee.IntegrityError:
+        bottle.abort(403, "User already exists")
+    except peewee.DoesNotExist:
+        bottle.abort(404, "User not found")
+
+
+@app.get('/users/<username>')
+@bottle.auth_basic(auth.root_check)
+def get_user(username):
+    with handle_user_errors():
+        return auth.get_user(username)
+
+
+@app.get('/users')
+@bottle.auth_basic(auth.root_check)
+def get_all_users():
+    with handle_user_errors():
+        return auth.get_all_users()
+
+
+@app.post('/users/<username>')
+@bottle.auth_basic(auth.root_check)
+def create_or_update_user(username):
+    with handle_user_errors():
+        return auth.create_or_update_user(username)
+
+
+@app.delete('/users/<username>')
+@bottle.auth_basic(auth.root_check)
+def delete_user(username):
+    with handle_user_errors():
+        return auth.delete_user(username)
+
+
+@app.get('/users/<username>/tokens')
+@bottle.auth_basic(auth.check)
+def get_all_tokens(username):
+    if auth.current_user_or_root(username, bottle.request.auth):
+        with handle_user_errors():
+            return auth.get_all_tokens(username)
+    else:
+        bottle.response.headers['WWW-Authenticate'] = 'Basic realm="private"'
+        return bottle.HTTPError(401, "Access denied.")
+
+
+@app.get('/users/<username>/tokens/<token>')
+@bottle.auth_basic(auth.check)
+def get_token(username, token):
+    if auth.current_user_or_root(username, bottle.request.auth):
+        with handle_user_errors():
+            return auth.get_token(username, token)
+    else:
+        bottle.response.headers['WWW-Authenticate'] = 'Basic realm="private"'
+        return bottle.HTTPError(401, "Access denied.")
+
+
+@app.post('/users/<username>/tokens')
+@bottle.auth_basic(auth.check)
+def create_token(username):
+    if auth.current_user_or_root(username, bottle.request.auth):
+        with handle_user_errors():
+            return auth.create_token(username)
+    else:
+        bottle.response.headers['WWW-Authenticate'] = 'Basic realm="private"'
+        return bottle.HTTPError(401, "Access denied.")
+
+
+@app.delete('/users/<username>/tokens/<token>')
+@bottle.auth_basic(auth.check)
+def delete_token(username, token):
+    if auth.current_user_or_root(username, bottle.request.auth):
+        with handle_user_errors():
+            return auth.delete_token(username, token)
+    else:
+        bottle.response.headers['WWW-Authenticate'] = 'Basic realm="private"'
+        return bottle.HTTPError(401, "Access denied.")
