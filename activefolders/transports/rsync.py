@@ -44,10 +44,7 @@ class RsyncMixin:
         return remote_host
 
     def _get_remote_path(self):
-        if hasattr(self, '_transfer'):
-            # TODO: Implement
-            pass
-        elif hasattr(self, '_folder_destination'):
+        if hasattr(self, '_folder_destination'):
             dst_conf = conf.destinations[self._folder_destination.destination]
             home_dir = dst_conf['home_dir']
             user = self._folder_destination.credentials['user']
@@ -79,7 +76,7 @@ class DestinationTransport(RsyncMixin, base.DestinationTransport):
     def _start_export(self):
         rsync_cmd = self._get_rsync_cmd()
         rsync_cmd.append(self._folder_destination.folder.path())
-        rsync_cmd.append("{}:{}".format(self._get_remote_host(), self._get_remote_path()))
+        rsync_cmd.append(self._get_remote_host())
         with Key(self._folder_destination):
             subprocess.check_call(rsync_cmd)
 
