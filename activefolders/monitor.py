@@ -98,6 +98,11 @@ class TransportMonitor(Thread):
             db.FolderDestination.destination<<reachable_destinations)
 
         for folder_destination in folder_destinations:
+            # Don't check for results if an export exists
+            num_exports = db.Export.select().where(db.Export.folder_destination==folder_destination).count()
+            if num_exports > 0:
+                continue
+
             if folder_destination.results_folder is None:
                 self._create_results_folder(folder_destination)
 
