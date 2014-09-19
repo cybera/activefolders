@@ -1,6 +1,8 @@
 from io import StringIO
 import os
+import re
 import subprocess
+import threading
 import paramiko
 import activefolders.conf as conf
 import activefolders.transports.base as base
@@ -15,7 +17,7 @@ class Key():
     def __enter__(self):
         key_string = self._folder_destination.credentials['private_key']
         key = paramiko.RSAKey.from_private_key(StringIO(key_string))
-        key_path = self.get_path
+        key_path = self.get_path()
         key.write_private_key_file(key_path)
 
     def __exit__(self, type, value, traceback):
@@ -23,9 +25,8 @@ class Key():
         subprocess.check_call(["shred", "-u", key_path])
 
     def get_path(self):
-        uuid = self._folder_destination.folder.uuid
-        destination = self._folder_destination.destination
-        key_path = "/tmp/{}-{}".format(uuid, destination)
+        thread_id = threading.current_thread().ident
+        key_path = "/tmp/{}.key".format(thread_id)
         return key_path
 
 class RsyncMixin:
@@ -58,7 +59,8 @@ class RsyncMixin:
     def _get_rsync_cmd(self):
         rsync_cmd = []
         rsync_cmd.append("rsync")
-        rsync_cmd.append("-auvz")
+        rsync_cmd.append("-rtuz")
+        rsync_cmd.append("--stats")
         if hasattr(self, '_folder_destination'):
             rsync_cmd.append("-e")
             rsync_cmd.append("ssh -i {}".format(Key(self._folder_destination).get_path()))
@@ -92,12 +94,28 @@ class ResultsTransport(RsyncMixin, base.ResultsTransport):
             source = "{} {}".format(source, full_path)
         source = source + "'"
         rsync_cmd.append(source)
-        rsync_cmd.append(self._folder_destination.folder.path())
+        rsync_cmd.append(self._folder_destination.results_folder.path())
+
+        with Key(self._folder_destination):
+            output = subprocess.check_output(rsync_cmd)
+
+        return self._files_transferred(output) > 0
 
     def _get_auto_results(self):
         rsync_cmd = self._get_rsync_cmd()
         rsync_cmd.append("--compare-dest={}".format(self._folder_destination.folder.path()))
         rsync_cmd.append("{}:{}".format(self._get_remote_host(), self._get_remote_path()))
-        rsync_cmd.append(self._folder_destination.folder.path())
+        rsync_cmd.append(self._folder_destination.results_folder.path())
+
         with Key(self._folder_destination):
-            subprocess.check_call(rsync_cmd)
+            output = subprocess.check_output(rsync_cmd)
+
+        return self._files_transferred(output) > 0
+
+    def _files_transferred(self, output):
+        output = output.decode('utf-8')
+        output = output.split('\n')
+        r = re.compile(r"Number of files transferred: (\d+)")
+        files_transferred = [ m.group(1) for l in output for m in [ r.search(l) ] if m is not None ]
+        files_transferred = int(files_transferred[0])
+        return files_transferred
