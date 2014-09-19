@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from requests.auth import HTTPBasicAuth
 import json
 import requests
 import activefolders.conf as conf
@@ -20,12 +21,14 @@ class Request:
         self._success = None
 
     def execute(self, *args, **kwargs):
+        secret = conf.settings['dtnd']['root_secret']
         try:
             resp = requests.request(self._method,
                                     self._url,
                                     headers=self._headers,
                                     params=self._params,
                                     data=json.dumps(self._data),
+                                    auth=HTTPBasicAuth(secret, None),
                                     *args, **kwargs)
         except requests.ConnectionError:
             resp = None
@@ -93,7 +96,9 @@ class AddFolderRequest(PostRequest):
             destinations[folder_dst.destination] = {
                 'credentials': folder_dst.credentials,
                 'result_files': folder_dst.result_files,
-                'check_for_results': folder_dst.check_for_results
+                'check_for_results': folder_dst.check_for_results,
+                'results_destination': folder_dst.results_destination,
+                'results_credentials': folder_dst.results_credentials
             }
 
         data = {
@@ -129,12 +134,14 @@ class AddDestinationRequest(PostRequest):
         data['credentials'] = folder_destination.credentials
         data['result_files'] = folder_destination.result_files
         data['check_for_results'] = folder_destination.check_for_results
+        data['results_destination'] = folder_destination.results_destination
+        data['results_credentials'] = folder_destination.results_credentials
         super().__init__(command=command, params=params, data=data, expected_responses=expected_responses, *args, **kwargs)
 
 
 class RemoveDestinationRequest(DeleteRequest):
     def __init__(self, folder, destination, *args, **kwargs):
-        command = "folders/{}/destinations".format(folder.uuid)
+        command = "/folders/{}/destinations".format(folder.uuid)
         expected_responses = [ 200, 404 ]
         params = { 'dst': destination }
         super().__init__(command=command, params=params, expected_responses=expected_responses, *args, **kwargs)

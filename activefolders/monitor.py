@@ -6,6 +6,7 @@ import activefolders.conf as conf
 import activefolders.db as db
 import activefolders.controllers.folders as folders
 import activefolders.controllers.transfers as transfers
+import activefolders.controllers.exports as exports
 import activefolders.transports.gridftp_simple as gridftp
 import activefolders.utils as utils
 import activefolders.requests as requests
@@ -144,8 +145,21 @@ class TransportMonitor(Thread):
 
     def _transfer_results(self, folder_destination):
         results_folder = folder_destination.results_folder
-        home_dtn = folder_destination.folder.home_dtn
-        transfers.add(results_folder, home_dtn)
+
+        if folder_destination.results_destination is None:
+            home_dtn = folder_destination.folder.home_dtn
+            transfers.add(results_folder, home_dtn)
+        else:
+            try:
+                db.FolderDestination.get(
+                    db.FolderDestination.folder==results_folder)
+            except peewee.DoesNotExist:
+                db.FolderDestination.create(folder=results_folder,
+                    destination=folder_destination.results_destination,
+                    credentials=folder_destination.credentials)
+
+            transfers.add_all(results_folder.uuid)
+            exports.add_all(results_folder.uuid)
 
 
 class RequestMonitor(Thread):
