@@ -29,11 +29,12 @@ class Key():
         key_path = "/tmp/{}.key".format(thread_id)
         return key_path
 
+
 class RsyncMixin:
     def _get_remote_host(self):
         if hasattr(self, '_transfer'):
             dtn_conf = conf.dtns[self._transfer.dtn]
-            remote_host = "{}@{}".format("USER", dtn_conf['url'])
+            remote_host = dtn_conf['url']
         elif hasattr(self, '_folder_destination'):
             dst_conf = conf.destinations[self._folder_destination.destination]
             host = dst_conf['url']
@@ -56,7 +57,7 @@ class RsyncMixin:
     def _get_rsync_cmd(self):
         rsync_cmd = []
         rsync_cmd.append("rsync")
-        rsync_cmd.append("-rtuz")
+        rsync_cmd.append("-auz")
         rsync_cmd.append("--stats")
         if hasattr(self, '_folder_destination'):
             rsync_cmd.append("-e")
@@ -76,7 +77,7 @@ class DestinationTransport(RsyncMixin, base.DestinationTransport):
     def _start_export(self):
         rsync_cmd = self._get_rsync_cmd()
         rsync_cmd.append(self._folder_destination.folder.path())
-        rsync_cmd.append(self._get_remote_host())
+        rsync_cmd.append(self._get_remote_host() + ":~/")
         with Key(self._folder_destination):
             subprocess.check_call(rsync_cmd)
 
@@ -84,24 +85,30 @@ class DestinationTransport(RsyncMixin, base.DestinationTransport):
 class ResultsTransport(RsyncMixin, base.ResultsTransport):
     def _get_results(self):
         rsync_cmd = self._get_rsync_cmd()
-        source = self._get_remote_host() + ":'"
+        rsync_cmd.append("--relative")
+        source = "{}:".format(self._get_remote_host())
         result_files = self._folder_destination.result_files
         for result_file in result_files:
-            full_path = os.path.join(self._get_remote_path(), result_file)
+            full_path = os.path.join(self._get_remote_path(), "./", result_file)
             source = "{} {}".format(source, full_path)
-        source = source + "'"
         rsync_cmd.append(source)
         rsync_cmd.append(self._folder_destination.results_folder.path())
 
         with Key(self._folder_destination):
-            output = subprocess.check_output(rsync_cmd)
-
+            try:
+                output = subprocess.check_output(rsync_cmd)
+            except subprocess.CalledProcessError as e:
+                # Rsync will return error code 23 if all files are not present, but will still transfer those that are
+                if e.returncode != 23:
+                    raise e
+                output = e.output
+ 
         return self._files_transferred(output) > 0
 
     def _get_auto_results(self):
         rsync_cmd = self._get_rsync_cmd()
-        rsync_cmd.append("--compare-dest={}".format(self._folder_destination.folder.path()))
-        rsync_cmd.append("{}:{}".format(self._get_remote_host(), self._get_remote_path()))
+        rsync_cmd.append("--compare-dest={}/".format(self._folder_destination.folder.path()))
+        rsync_cmd.append("{}:{}/".format(self._get_remote_host(), self._get_remote_path()))
         rsync_cmd.append(self._folder_destination.results_folder.path())
 
         with Key(self._folder_destination):

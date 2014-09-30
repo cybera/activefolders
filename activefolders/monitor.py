@@ -135,10 +135,9 @@ class TransportMonitor(Thread):
 
     def _update_results_status(self, transport, folder_destination):
         if transport.new_results:
-            if folder_destination.initial_results:
-                folder_destination.tries_without_changes = 0
-            else:
+            if (folder_destination.result_files is not None and folders.all_results_present(folder_destination)) or folder_destination.result_files is None:
                 folder_destination.initial_results = True
+            folder_destination.tries_without_changes = 0
             folder_destination.save()
             self._transfer_results(folder_destination)
         elif folder_destination.initial_results:
