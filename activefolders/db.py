@@ -108,6 +108,7 @@ class Transfer(BaseModel):
 class User(BaseModel):
     name = peewee.CharField()
     reg_date = peewee.DateTimeField()
+    email = peewee.TextField()
 
     class Meta:
         indexes = (
