@@ -182,3 +182,17 @@ def get_dtns(folder):
             dtns.add(dtn)
 
     return dtns
+
+
+def all_results_present(folder_destination):
+    result_files = folder_destination.result_files
+
+    if result_files is None or len(result_files) == 0:
+        return None
+
+    num_files = 0
+
+    for _, _, files in os.walk(folder_destination.results_folder.path()):
+        num_files += len(files)
+
+    return num_files == len(result_files)
