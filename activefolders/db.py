@@ -1,7 +1,12 @@
+from Crypto.Cipher import AES
+from Crypto import Random
+from uuid import UUID
 import peewee
 import json
+import base64
 import activefolders.conf as conf
-from uuid import UUID
+import activefolders.key_helper as key_helper
+
 
 database = peewee.SqliteDatabase(None, fields={'text': 'text'}, threadlocals=True)
 
@@ -52,6 +57,31 @@ class JsonField(peewee.Field):
         return json.loads(value)
 
 
+class EncryptedJsonField(JsonField):
+    def _create_cipher(self, iv):
+        key = key_helper.get_key()
+        return AES.new(key, AES.MODE_CFB, iv)
+
+    def db_value(self, value):
+        iv = Random.new().read(AES.block_size)
+        cipher = self._create_cipher(iv)
+
+        db_val = super().db_value(value)
+        db_val = base64.b64encode(iv + cipher.encrypt(db_val))
+        return db_val
+
+    def python_value(self, value):
+        value = base64.b64decode(value)
+
+        iv = value[:AES.block_size]
+        cipher = self._create_cipher(iv)
+
+        python_val = value[AES.block_size:]
+        python_val = cipher.decrypt(python_val).decode()
+        python_val = super().python_value(python_val)
+        return python_val
+
+
 class Folder(BaseModel):
     uuid = UUIDField(primary_key=True)
     dirty = peewee.BooleanField(default=False)
@@ -66,7 +96,7 @@ class Folder(BaseModel):
 class FolderDestination(BaseModel):
     folder = peewee.ForeignKeyField(Folder, related_name='destinations')
     destination = peewee.TextField()
-    credentials = JsonField(null=True)
+    credentials = EncryptedJsonField(null=True)
     check_for_results = peewee.BooleanField(default=False)
     result_files = JsonField(null=True)
     results_folder = peewee.ForeignKeyField(Folder, related_name='results_for', null=True)
@@ -74,7 +104,7 @@ class FolderDestination(BaseModel):
     initial_results = peewee.BooleanField(default=False)
     tries_without_changes = peewee.IntegerField(default=0)
     results_destination = peewee.TextField(null=True)
-    results_credentials = JsonField(null=True)
+    results_credentials = EncryptedJsonField(null=True)
 
     class Meta:
         # Each destination can only exist once per folder

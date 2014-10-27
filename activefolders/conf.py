@@ -1,5 +1,6 @@
 import configparser
 
+
 settings = configparser.ConfigParser()
 settings.read('/etc/activefolders/activefolders.conf')
 
