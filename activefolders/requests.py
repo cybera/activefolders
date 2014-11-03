@@ -29,6 +29,7 @@ class Request:
                                     params=self._params,
                                     data=json.dumps(self._data),
                                     auth=HTTPBasicAuth(secret, None),
+                                    verify=false,  # Ignore certificate errors
                                     *args, **kwargs)
         except requests.ConnectionError:
             resp = None
