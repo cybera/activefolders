@@ -76,7 +76,7 @@ def create_folder():
 
 
 @app.post('/add_folder')
-@bottle.auth_basic(auth.check)
+@bottle.auth_basic(auth.root_check)
 def add_folder():
     """ Adds existing folder from another DTN """
     folder_data = bottle.request.json
