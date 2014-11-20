@@ -86,6 +86,7 @@ class FolderDestination(BaseModel):
 class Export(BaseModel):
     folder_destination = peewee.ForeignKeyField(FolderDestination)
     active = peewee.BooleanField(default=False)
+    email = peewee.TextField(null=True)
 
     class Meta:
         indexes = (
@@ -97,6 +98,7 @@ class Transfer(BaseModel):
     folder = peewee.ForeignKeyField(Folder)
     dtn = peewee.TextField()
     active = peewee.BooleanField(default=False)
+    email = peewee.TextField(null=True)
 
     class Meta:
         # Only one pending and one active transfer per folder destination

@@ -10,6 +10,7 @@ import activefolders.controllers.exports as exports
 import activefolders.transports.gridftp_simple as gridftp
 import activefolders.utils as utils
 import activefolders.requests as requests
+import activefolders.email as email
 
 LOG = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ class TransportMonitor(Thread):
                 continue
             elif not transport.success:
                 LOG.error("Transfer {} failed with error: {}".format(transfer_id, transport.exception))
+                email.TransferFailedMessage(transfer).send()
             del self._transfers[transfer_id]
             transfer.delete_instance()
 
@@ -86,6 +88,7 @@ class TransportMonitor(Thread):
                 continue
             elif not transport.success:
                 LOG.error("Export {} failed with error: {}".format(export_id, transport.exception))
+                email.ExportFailedMessage(export).send()
             del self._exports[export_id]
             export.delete_instance()
 

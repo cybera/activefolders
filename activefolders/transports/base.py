@@ -53,7 +53,8 @@ class DtnTransport(Transport):
     def _transfer_complete(self):
         folder = self._transfer.folder
         dtn = self._transfer.dtn
-        request = requests.StartTransfersRequest(dtn=dtn, folder=folder)
+        email = self._transfer.email
+        request = requests.StartTransfersRequest(dtn=dtn, folder=folder, email=email)
 
         resp = request.execute()
         if not request.success:

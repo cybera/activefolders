@@ -82,10 +82,11 @@ class DeleteRequest(Request):
 
 
 class StartTransfersRequest(PostRequest):
-    def __init__(self, folder, *args, **kwargs):
+    def __init__(self, folder, email=None, *args, **kwargs):
         command = "/folders/{}/start_transfers".format(folder.uuid)
         expected_responses = [ 200 ]
-        super().__init__(command=command, expected_responses=expected_responses, *args, **kwargs)
+        data = { 'email': email }
+        super().__init__(command=command, data=data, expected_responses=expected_responses, *args, **kwargs)
 
 
 class AddFolderRequest(PostRequest):

@@ -13,7 +13,14 @@ class Message:
         self._message['To'] = recipient
 
     def send(self):
-        with SMTP(conf.settings['dtnd']['smtp_server']) as smtp:
+        if self._message['To'] is None:
+            return
+
+        smtp_server = conf.settings['dtnd'].get('smtp_server')
+        if smtp_server is None:
+            return
+
+        with SMTP(smtp_server) as smtp:
             smtp.send_message(self._message)
 
 
@@ -22,7 +29,7 @@ class TransferFailedMessage(Message):
         uuid = transfer.folder.uuid
         body = "Folder {} could not be transferred to the home DTN of its destination.".format(uuid)
         subject = "Transfer failed"
-        recipient = None
+        recipient = transfer.email
         super().__init__(subject, body, recipient)
 
 
@@ -32,5 +39,5 @@ class ExportFailedMessage(Message):
         destination = export.folder_destination.destination
         body = "Folder {} could not exported to destination {}. Please make sure your credentials are correct and try again.".format(uuid, destination)
         subject = "Export failed"
-        recipient = None
+        recipient = export.email
         super().__init__(subject, body, recipient)
