@@ -1,6 +1,5 @@
 from threading import Thread
 import activefolders.requests as requests
-import activefolders.conf as conf
 
 
 class Transport(Thread):
