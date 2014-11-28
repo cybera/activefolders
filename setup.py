@@ -7,12 +7,12 @@ def read(fname):
 
 setup(
     name="activefolders",
-    version="0.0.2-SNAPSHOT",
+    version="1.0.0",
     packages=find_packages(exclude=['test']),
     author="Cybera Inc.",
     author_email="devops@cybera.ca",
-    license="BSD",
-    url="https://github.com/cybera/active-folders",
+    license="Apache 2.0",
+    url="https://github.com/cybera/activefolders",
     description="A gridftp wrapper intended to provide Dropbox-like service to scientists",
     long_description=read('README.md'),
     install_requires=["bottle", "paramiko", "peewee", "requests", "pycrypto"],
