@@ -32,7 +32,7 @@ A simple client illustrating use of the API is available for download [here](htt
 
 
 ## Support
-Questions?  Send an email to activefolders@gmail.com
+Questions?  Send an email to activefolders.project@gmail.com
 
 
 ## License and Authors
