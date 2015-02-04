@@ -1,4 +1,6 @@
 ### January 2015
+First public release.  Not intended for production service
+
 * Users
   * Transfer files from user machines to HPC centres or other destinations
   * Automatically detect and retrieve results from computations
